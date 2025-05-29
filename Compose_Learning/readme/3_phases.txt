@@ -1,0 +1,117 @@
+• Compose Phases: When a data is provided to compose, it goes through 3 phases(Composition, Layout, Drawing).
+                File Location: /pictures/phases.png
+    1) Composition: In the this phase, the entire information is transformed into tree data structure(that represents your
+                    UI) form by the Compose runtime. This UI tree consists of layout nodes. Together, these layout nodes
+                    hold all the information needed to complete the next phases.
+
+                    Diagram: /pictures/phase_composition.gif
+                    Short Description: What UI to show
+
+    2) Layout: In the this phase, it identifies the placement of the UI on the screen. Its main purpose is to measure the
+               width and height of each UI element and identify X-Y coordinates in available 2D space.
+
+               For measurement, it takes the UI tree as input, traverses it, identifies the children if any and measures
+               the width and height accordingly.As every node’s measurement depends upon its own properties and on
+               children’s width & height.
+
+               To complete this process, there are further three steps :
+                    • Measure Children : Measure of its children if any.
+                    • Decide its own side : On the basis of its children’s width and height and its own properties,
+                                            it decides its own maximum size.
+                    • Place children : Finally, it positions its children in relation to where it will be at the end of
+                                       the phase. Like for columns, it puts children in vertical positioning.
+
+               At the end of this phase, we will have all the sizes and X-Y coordinates of the layout nodes. It will be
+               the input of the next phase.
+
+               Diagram: /pictures/phase_layout.gif
+               Short Description: Where to place UI
+
+    3) Drawing: In the Drawing phase, it draws UI on the screen or canvas. The tree is traversed again and according to
+                size and X-Y coordinates, each node draws its pixels on the screen.
+
+                Diagram: /pictures/phase_drawing.gif
+                Short Description: How it renders
+
+
+    Notes: These three phases virtually run every frame in the same order (keeping in mind the exceptions) to be able to
+           keep the UI in sync with the state.
+                        So any composable that is build on top of the SubcomposeLayout layout does not follow these phases
+           exactly. Some notable examples being LazyColumn, LazyRow and BoxWithConstraints.
+
+
+• 🎯State reads within a @Composable function or lambda block affect composition and potentially the subsequent phases.
+    When the state value changes, the recomposer schedules reruns of all the composable functions which read that state
+    value. Note that the runtime may decide to skip some or all of the composable functions if the inputs haven't changed.
+
+• Example(Optimizing state reads):
+
+        This code works, but results in nonoptimal performance. As written, the code reads the value of the
+        firstVisibleItemScrollOffset state and passes it to the Modifier.offset(offset: Dp) function. As the user
+        scrolls the firstVisibleItemScrollOffset value will change. As we know, Compose tracks any state reads so that
+        it can restart (re-invoke) the reading code, which in our example is the content of the Box.
+
+                ❌Bad Example:
+
+                        Box {
+                            val listState = rememberLazyListState()
+
+                            Image(
+                                // ...
+                                // Non-optimal implementation!
+                                Modifier.offset(
+                                    with(LocalDensity.current) {
+                                        // State read of firstVisibleItemScrollOffset in composition
+                                        (listState.firstVisibleItemScrollOffset / 2).toDp()
+                                    }
+                                )
+                            )
+
+                            LazyColumn(state = listState) {
+                                // ...
+                            }
+                        }
+
+
+                This is an example of state being read within the composition phase. This is not necessarily a bad thing
+                at all, and in fact is the basis of recomposition, allowing data changes to emit new UI. In this example
+                though it is nonoptimal, because every scroll event will result in the entire composable content being
+                reevaluated, and then also measured, laid out and finally drawn. We’re triggering the Compose phase on
+                every scroll even though what we are showing hasn’t changed, only where it is shown. We can optimize
+                our state read to only re-trigger the layout phase.
+
+                ✅ Correct Example:
+
+                        Box {
+                            val listState = rememberLazyListState()
+
+                            Image(
+                                // ...
+                                // Non-optimal implementation!
+                                Modifier.offset(
+                                    with(LocalDensity.current) {
+                                        // State read of firstVisibleItemScrollOffset in composition
+                                        (listState.firstVisibleItemScrollOffset / 2).toDp()
+                                    }
+                                )
+                            )
+
+                            LazyColumn(state = listState) {
+                                // ...
+                            }
+                        }
+
+                So why is this more performant? The lambda block we provide to the modifier is invoked during the layout
+                phase (specifically, during the layout phase's placement step), meaning that our firstVisibleItemScrollOffset
+                state is no longer read during composition. Because Compose tracks when state is read, this change means
+                that if the firstVisibleItemScrollOffset value changes, Compose only has to restart the layout and drawing phases.
+
+• 🎯 Visual Analogy
+    Phase	            Analogy
+
+    Composition	        Building a house blueprint
+    Recomposition	    Updating a room in the blueprint
+    Layout	            Measuring and arranging furniture
+    Drawing	            Painting the house
+    Skipping	        No need to repaint or rearrange
+

@@ -1,0 +1,248 @@
+🧱 Structure of a Custom Modifier
+    A custom modifier typically consists of two main components:
+        • Modifier Factory: An extension function on Modifier that provides a fluent API, enabling easy chaining of modifiers.
+        • Modifier Element: Defines the actual behavior or effect of the modifier.
+
+🔧 Approaches to Creating Custom Modifiers
+    1. Stateless Modifier Factory or Pure modifier factory (Non-Composable)
+            🔹 Use when:
+                • You’re just chaining existing modifiers
+                • No need for state or runtime context
+            ✅ Pros:
+                • Clean, reusable
+                • Most readable and performant
+            ❌ Cons:
+                • No dynamic logic possible
+
+            Example:
+                fun Modifier.cardStyle() = this
+                    .padding(8.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color.White)
+
+    2. custom modifier using CMF(composable modifier factory)
+
+            🔹 Use when:
+                • You need Compose runtime (e.g. remember, LaunchedEffect, animate*AsState)
+                • Modifier depends on recomposable state
+            ✅ Pros:
+                • Simple to write
+                • Can use Compose APIs
+            ❌ Cons:
+                • Triggers recomposition
+                • Not lifecycle-aware
+                • Poor for performance-sensitive modifiers
+
+            Example:
+                    @Composable
+                    fun Modifier.fade(enabled: Boolean): Modifier {
+                        val alpha by animateFloatAsState(if (enabled) 0.5f else 1f)
+                        return this.graphicsLayer { this.alpha = alpha }
+                    }
+
+    3. composed { }(Legacy Runtime Modifier)
+            🔹 Use when:
+                • You want state/Compose APIs inside a modifier chain
+                • Still need remember, LaunchedEffect inside modifier logic
+            ✅ Pros:
+                • Can use Compose runtime
+                • Fine-grained logic inside modifiers
+            ❌ Cons:
+                • Deprecated for most cases
+                • Slower, recreated on every recomposition
+                • Not node-based (no lifecycle hooks)
+
+            Example:
+                fun Modifier.highlightOnFocus() = composed {
+                    val isFocused = remember { mutableStateOf(false) }
+                    this
+                        .onFocusChanged { isFocused.value = it.isFocused }
+                        .background(if (isFocused.value) Color.Yellow else Color.Transparent)
+                }
+
+    3. Modifier.Node / ModifierNodeElement (Recommended Modern Way)
+                🔹 Use when:
+                           • You need lifecycle hooks, custom layout, drawing, or event handling
+                           • Want high performance and reuse
+                ✅ Pros:
+                           • Most performant
+                           • Lifecycle-aware (onAttach, onDetach), meaning the modifier can respond when it is added to or
+                             removed from the composition tree.
+                           • Doesn’t reallocate on recomposition
+                ❌ Cons:
+                           • More boilerplate to set up
+                🧪 Example:
+                               fun Modifier.fixedPadding(padding: Dp) = this then FixedPaddingElement(padding)
+
+                               data class FixedPaddingElement(val padding: Dp) : ModifierNodeElement<MyPaddingNode>() {
+                                   override fun create() = MyPaddingNode(padding)
+                                   override fun update(node: MyPaddingNode) {
+                                       node.padding = padding
+                                   }
+                               }
+
+                               class MyPaddingNode(var padding: Dp) : Modifier.Node(), LayoutModifier {
+                                   override fun MeasureScope.measure(measurable: Measurable, constraints: Constraints): MeasureResult {
+                                       val pad = padding.roundToPx()
+                                       val placeable = measurable.measure(constraints.offset(-pad * 2, -pad * 2))
+                                       return layout(placeable.width + pad * 2, placeable.height + pad * 2) {
+                                           placeable.place(pad, pad)
+                                       }
+                                   }
+                               }
+
+                🔍 Problem: Modifier Nodes don’t automatically observe Compose state
+                       When you use Modifier.Node, it does not recompose like a Composable function. This means if you try
+                       to access a CompositionLocal (like LocalDensity, LocalLayoutDirection, or a custom one), changes to
+                       it won’t automatically update the modifier.
+
+                       For that you need to use CompositionLocalConsumerModifierNode, Implementing this interface allows
+                       your Modifier.Node to read composition locals.
+
+    🧾 Comparison Table(CMF vs Composed{})
+            🔹1. Extractability:
+                    Example:
+                        @Composable
+                        fun Modifier.usingComposableFactory(): Modifier = ...
+
+                        fun Modifier.usingComposed(): Modifier = composed {/***/}
+
+                        // usingComposed can be used outisde the Composition scope
+                        val extractedModifier = Modifier.usingComposed()
+
+                        @Composable
+                        fun MyComposable() {
+                            ...
+                            // we can only use usingComposableFactory() inside a @Composable scope
+                            Text("Hello $it", modifier = extractedModifier.usingComposableFactory())
+                        }
+                    Explanation:
+                        • when we create a CMF we can’t use it outside of the Composition scope since it’s annotated with
+                          @Composable.
+                        • On the contrary, this isn’t an issue with composed at all, as it doesn’t require @Composable
+                          annotation, allowing for broader usage.
+
+            🔹2. Resolution Location of CompositionLocal Values:
+                    Explanation:
+                            When using CompositionLocals such as LocalContentColor, CMF and composed behave differently.
+
+                                • CMF: CompositionLocals values are resolved at the call site(at run time) of the modifier
+                                    factory.
+                                • composed: CompositionLocals values are resolved at the usage site(at creation time) of
+                                    the composed factory.
+
+                    Example:
+                            @Composable
+                            fun Modifier.myCMFBackground(): Modifier {
+                                val color = LocalContentColor.current
+                                return background(color.copy(alpha = 0.5f))
+                            }
+
+                            fun Modifier.myComposedBackground(): Modifier = composed {
+                                val color = LocalContentColor.current
+                                background(color.copy(alpha = 0.5f))
+                            }
+
+                            @Composable
+                            fun MyScreen() {
+                                CompositionLocalProvider(LocalContentColor provides Color.Green) {
+                                    // Background modifier created with green background
+                                    val usingCMFModifier = Modifier.myCMFBackground().size(16.dp)
+                                    val usingComposedModifier = Modifier.myComposedBackground().size(16.dp)
+
+                                    // LocalContentColor updated to red
+                                    CompositionLocalProvider(LocalContentColor provides Color.Red) {
+                                         Row() {
+                                            // Box will have green background, not red as expected.
+                                            Box(modifier = usingCMFModifier)
+
+                                            // Box has red background as expected.
+                                            Box(modifier = usingComposedModifier)
+                                        }
+                                    }
+                                }
+                            }
+
+            🔹3. State Resolution:
+                    Let’s say we have a custom Modifier that sets a random background and rotates the Layout when it’s
+                    clicked. If we have 2 implementations using composed and CMF as following…
+
+                    Example:
+                            fun Modifier.rotateOnClick() = composed {
+                                val color = remember { mutableStateOf(listOf(Color.Red, Color.Green).random()) }
+                                var isClicked by remember { mutableStateOf(false) }
+                                val rotation by animateFloatAsState(targetValue = if (isClicked) 45f else 0f)
+
+                                background(color = color.value)
+                                    .clickable { isClicked = !isClicked }
+                                    .graphicsLayer { rotationZ = rotation }
+                            }
+
+                            @Composable
+                            fun Modifier.rotateOnClick(): Modifier {
+                               // same as rotateOnClickUsingComposed...
+                            }
+
+                        🔸 1. Scenario:
+                                @Composable
+                                fun BoxesRow() {
+                                    LazyRow {
+                                        items(10) {
+                                            Box(
+                                                modifier = Modifier.rotateOnClick().size(100.dp),
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Output:
+                                       This will work perfectly as expected. It’s not impressive I know :)
+                                     Reference Image: ./pictures/result_cmf_vs_composed_good.gif
+
+                        🔸 2. Scenario:
+                                @Composable
+                                fun BoxesRow() {
+                                    val modifier = Modifier
+                                        .rotateOnClick()
+                                        .size(100.dp)
+                                    LazyRow {
+                                        items(10) {
+                                            Box(
+                                                modifier = modifier,
+                                                contentAlignment = Alignment.Center,
+                                            ) { ... }
+                                        }
+                                    }
+                                }
+
+                                Output:
+                                    • CMF: all items are maintain their color as CMF resolves that state only once at the
+                                          call site
+                                    • composed: all items will be in red as composed resolves state at the usage site for
+                                            each Layout
+                                    Reference Image: ./pictures/result_cmf_vs_composed_bad.gif
+
+            🔹4. Performance:
+                   • composed: It performs poorly as it usage "materialize()", which is pretty expensive because even a
+                                simple modifier will utilize a lot of other modifiers/states, and flatting out all of
+                                that impacts the performance and potentially creates redundant copies of Modifier.Elements.
+
+                                    That would be a total of…
+                                        - 13 Modifier.composed calls
+                                        - 34 remember calls
+                                        - 11 Side Effects
+                                        - 16 Leaf Modifier.Elements
+                   • CMF: On the other hand, CMF does not use the materialize() function which reduces the performance overhead.
+
+            🔹5. Skippablity:
+                    Sadly both approaches are not skippable 🥲
+
+                   • composed: Since modifiers using composed aren’t @Composables themselves, the Compose Compiler can’t
+                                cache the lambda. That means that the resulting Modifier will never compare equals with
+                                 the previous one, making it a non-skippable modifier.
+                   • CMF: It is never skipped because composable functions that have return values cannot be skipped.
+
+Reference:
+    https://engineering.teknasyon.com/composable-modifier-vs-composed-factory-in-jetpack-compose-6cbb675b0e7b
+    https://proandroiddev.com/custom-modifiers-in-jetpack-compose-a950e6f9eb72
+    https://developer.android.com/develop/ui/compose/custom-modifiers

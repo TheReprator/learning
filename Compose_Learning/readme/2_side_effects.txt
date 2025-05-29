@@ -1,0 +1,161 @@
+Side effect: It refer to actions that affect the outside world or depend on external systems, and they are not
+            part of the UI composition itself.
+                        However, sometimes side-effects are necessary, for example, to trigger a one-off event such as
+            showing a snackbar or navigate to another screen given a certain state condition. These actions should be
+            called from a controlled environment that is aware of the lifecycle of the composable.
+
+    🔁 LaunchedEffect:
+        a) Runs suspend functions in the scope of a composable. Example
+                @Composable
+                fun MyComposable(id: String) {
+                    LaunchedEffect(id) {
+                        // Executes when 'id' changes or when first composed
+                        println("LaunchedEffect triggered with id: $id")
+                    }
+                }
+          • Use it to perform tasks like network calls, animations, or timers.
+          • It’s canceled and restarted when the key (id) changes.
+          • It’s canceled when it leaves the composition
+
+    🔁 rememberCoroutineScope:
+        a) Returns a coroutine scope that is tied to the lifecycle of the composable.
+             a.1) As LaunchedEffect is a composable function, it can only be used inside other composable functions. In
+                  order to launch a coroutine outside of a composable, but scoped so that it will be automatically
+                  canceled once it leaves the composition, use rememberCoroutineScope.
+             a.2) Also use rememberCoroutineScope whenever you need to control the lifecycle of one or more coroutines
+                  manually, for example, cancelling an animation when a user event happens.
+
+             a.3)
+                    @Composable
+                    fun CoroutineScopeExample() {
+                        val scope = rememberCoroutineScope()
+
+                        Button(onClick = {
+                            scope.launch {
+                                // Coroutine starts when button is clicked
+                                delay(1000)
+                                println("Button clicked and coroutine finished!")
+                            }
+                        }) {
+                            Text("Click Me")
+                        }
+                    }
+                • Coroutine is launched only when the user clicks.
+                • You control when it runs.
+
+    🔁 RememberUpdatedState:
+        a) It helps you hold onto the latest value of a variable (usually a lambda or state) inside a long-lived
+           side effect like LaunchedEffect or DisposableEffect.
+
+        b) Why? Because LaunchedEffect does not re-run unless its keys change — so if you capture a variable inside it,
+           you may be stuck with an outdated value.
+
+           ⚠️ The Problem Without rememberUpdatedState:
+                        @Composable
+                        fun MyScreen(onTimeout: () -> Unit) {
+                            // BAD: Captures onTimeout at the time LaunchedEffect runs
+                            LaunchedEffect(Unit) {
+                                delay(5000)
+                                onTimeout() // This might be outdated if onTimeout changes
+                            }
+                        }
+                 • If onTimeout changes during recomposition (e.g., updated from a parent), the above coroutine won’t
+                   reflect the new version — because LaunchedEffect did not restart(as it uses Unit as key).
+
+           ✅ Fixing It With rememberUpdatedState
+                        @Composable
+                        fun MyScreen(onTimeout: () -> Unit) {
+                            val updatedOnTimeout = rememberUpdatedState(onTimeout)
+
+                            LaunchedEffect(Unit) {
+                                delay(5000)
+                                updatedOnTimeout.value() // Always calls the latest version
+                            }
+                        }
+                    • Now, even if onTimeout changes during recomposition, the coroutine uses the latest version safely.
+
+    🔁 DisposableEffect:
+            a)🧼 What is DisposableEffect?
+                DisposableEffect is used when you want to perform side effects that:
+                    • Require setup when a composable enters composition, and
+                    • Require cleanup when it leaves composition (or when the key changes).
+                    • Think of it like onStart() and onStop() for Composables.
+
+               🧩 Basic Syntax
+                    @Composable
+                    fun MyComposable() {
+                        DisposableEffect(Unit) {
+                            // setup code here
+
+                            onDispose {
+                                // cleanup code here
+                            }
+                        }
+                    }
+
+                • DisposableEffect(key) is restarted if the key changes.
+                • The onDispose {} block is always called before restarting or when the composable leaves the composition.
+
+            b) Example:
+                    @Composable
+                    fun HomeScreen(
+                        lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
+                        onStart: () -> Unit, // Send the 'started' analytics event
+                        onStop: () -> Unit // Send the 'stopped' analytics event
+                    ) {
+                        // Safely update the current lambdas when a new one is provided
+                        val currentOnStart by rememberUpdatedState(onStart)
+                        val currentOnStop by rememberUpdatedState(onStop)
+
+                        // If `lifecycleOwner` changes, dispose and reset the effect
+                        DisposableEffect(lifecycleOwner) {
+                            // Create an observer that triggers our remembered callbacks
+                            // for sending analytics events
+                            val observer = LifecycleEventObserver { _, event ->
+                                if (event == Lifecycle.Event.ON_START) {
+                                    currentOnStart()
+                                } else if (event == Lifecycle.Event.ON_STOP) {
+                                    currentOnStop()
+                                }
+                            }
+
+                            // Add the observer to the lifecycle
+                            lifecycleOwner.lifecycle.addObserver(observer)
+
+                            // When the effect leaves the Composition, remove the observer
+                            onDispose {
+                                lifecycleOwner.lifecycle.removeObserver(observer)
+                            }
+                        }
+
+                        /* Home screen content */
+                    }
+
+                    In the code above, the effect will add the observer to the lifecycleOwner. If lifecycleOwner changes, the effect is
+                    disposed and restarted with the new lifecycleOwner.
+
+    🔁 SideEffect:
+            a) SideEffect is used to run non-suspending code after every successful recomposition.
+            b) 🔑 Key Characteristics
+                • It runs after every recomposition (unlike LaunchedEffect, which runs based on keys).
+                • It cannot launch coroutines or suspend functions.
+                • Used for things like:
+                        • Updating external objects
+                        • Calling Java-style APIs
+                        • Triggering analytics or logging
+                        • Bridging Compose state to external system state (like a ViewModel, map, or third-party view)
+            c)🧩 Basic Syntax
+                @Composable
+                fun MyComposable(count: Int) {
+                    SideEffect {
+                        println("Recomposition complete. Count is $count")
+                    }
+                }
+
+            d) 📛 What Happens If You Don't Use It?
+               If you update external state during composition (directly in your composable body), you break Compose's
+               declarative model and can cause:
+                    • Infinite recomposition loops
+                    • State inconsistencies
+                    • Runtime warnings/errors
+               Using SideEffect avoids these issues by delaying the effect until the composition is done.

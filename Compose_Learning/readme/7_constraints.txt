@@ -1,0 +1,196 @@
+📦 What Are Constraints?
+        • A Constraints object in Compose defines the minimum and maximum width and height a composable can have:
+                    Constraints(
+                        minWidth = Int,
+                        maxWidth = Int,
+                        minHeight = Int,
+                        maxHeight = Int)
+        • Every composable receives constraints from its parent and must measure itself within those limits.
+
+✅ Jetpack Compose Constraint Types (Common Classifications)
+        Type	        Description
+
+        Bounded	        min < max, child has flexibility within a range.
+                            The node has a maximum and minimum width and height.
+        Unbounded	    max == Constraints.Infinity, child can grow arbitrarily large.
+                            The node is not constrained to any size. The maximum width and height bounds are set to infinity.
+        Exact	        min == max for width or height, child must use a specific size.
+                            The node is asked to follow an exact size requirement. The minimum and maximum bounds are set
+                            to the same value.
+        Combination	    Mixed constraints (e.g., fixed width but unbounded height).
+                            The node follows a combination of the above constraint types. For example, a constraint could
+                            bound the width while allowing for an unbounded maximum height, or set an exact width but provide a bounded height.
+
+        1. ✅ Bounded Constraints
+                The child has a min/max range and must choose a size within it.
+                        Constraints(
+                            minWidth = 100, maxWidth = 200,
+                            minHeight = 50, maxHeight = 150
+                        )
+                📦 Used when:
+                    • You use Modifier.fillMaxWidth().padding()
+                    • Flexible layouts or responsive UI
+
+                👀 Behavior:
+                    • Child can pick any size inside range
+                    • Common in real-world Compose layouts
+
+        2. ✅ Unbounded Constraints
+                The maximum size is infinite, so the child can grow freely.
+                    Constraints(
+                        minWidth = 0, maxWidth = Constraints.Infinity,
+                        minHeight = 0, maxHeight = Constraints.Infinity
+                    )
+                📦 Used when:
+                    • Inside scrollable containers (LazyColumn, Scroll)
+                👀 Behavior:
+                    • Child decides how big it wants to be
+                    • Useful for dynamic lists, long content
+
+        3. ✅ Exact Constraints
+                The child must use a specific size.
+                    Constraints(
+                        minWidth = 100, maxWidth = 100,
+                        minHeight = 50, maxHeight = 50
+                    )
+                📦 Used when:
+                    • You use Modifier.size(100.dp)
+                    • Parent enforces a rigid size
+                👀 Behavior:
+                    • Child has no flexibility
+                    • Measures to exactly 100x50
+
+        4. ✅ Combination Constraints
+                Mixing fixed and flexible behavior.
+                    Constraints(
+                        minWidth = 100, maxWidth = 100, // exact width
+                        minHeight = 0, maxHeight = 300 // bounded height
+                    )
+                📦 Used when:
+                    • Fixed width (e.g., side drawer), dynamic height
+                👀 Behavior:
+                    • One dimension is rigid, the other is flexible
+                    • Great for adaptive UIs
+
+🧱 Categories of Constraint-Affecting Modifiers:
+    Modifier	                    Affects Constraints?	                Description
+    Modifier.size	                ✅ Yes (Exact)	                        Sets fixed width & height
+    Modifier.requiredSize	        ✅ Yes (Force Exact)	                Forces exact size, ignoring parent constraints
+    Modifier.width, height	        ✅ Yes (Exact in one axis)	            Fixes size in one dimension
+    Modifier.sizeIn	                ✅ Yes (Bounded)	                    Defines min/max bounds
+    Modifier.defaultMinSize	        ✅ Yes (Lower bound)	                Sets a default min width/height
+    Modifier.fillMaxSize,       	✅ Yes (Expands to max constraints)     Tries to occupy as much as allowed
+        fillMaxWidth, etc
+
+    🔍 Detailed Breakdown with Examples
+            1. Modifier.size(width, height): The size modifier declares the preferred size of the content.
+
+                    For example, Suppose parent gives you a constraint of 100-300 and 100-200 dp, width and height respectively,
+                         🔸 Behavior:
+                           • When container required size is 150:
+                                then it will easily get 150*150, as it lies between 100-300 and 100-200 dp respectively
+
+                           • When container required size is 50:
+                                then it will get 100*100, 50 dp is outside the provided constraint of(100-300 and 100-200 dp),
+                                So, whatever the minimum size is will be applied by default
+
+                           • When container required size is 350:
+                                then it will get 300*200, 350 dp is outside the provided constraint of(100-300 and 100-200 dp),
+                                So, whatever the maximum size is will be applied by default
+
+                          👀 Note: Chaining multiple size modifiers does not work. The first size modifier sets both the
+                                minimum and maximum constraints to a fixed value. Even if the second size modifier
+                                requests a smaller or larger size, it still needs to adhere to the exact bounds passed in,
+                                so it won't override those values
+
+            2. Modifier.requiredSize(width, height): Use the requiredSize modifier instead of size if you need your node
+                            to override the incoming constraints. The requiredSize modifier replaces the incoming
+                            constraints and passes the size you specify as exact bounds.
+
+                    For example, Suppose parent gives you a constraint of 100-300 and 100-200 dp, width and height respectively,
+
+                         🔸 Behavior:
+                           • When container required size is 150:
+                                then it will get 150*150, and will be placed in center of the parent provided constraint of 300*200
+                                Example:
+                                    Text(
+                                            text = "Hello $name!",
+                                            modifier = modifier.size(300.dp).background(Color.Red).requiredSize(50.dp).background(Color.Green) //1
+                                            //        modifier = modifier.size(300.dp).background(Color.Red).padding(10.dp).requiredSize(50.dp).background(Color.Green) //2
+                                        )
+                                    Here, Green will be placed in center
+                                    If we uncomment 2, comment 1, then Green will be placed in center of Red
+
+                           • When container required size is 50:
+                                then it will get 50*50, and will be placed in center of the parent provided constraint of 300*200
+
+                           • When container required size is 350:
+                                then it will overflow, 350 dp is outside the provided constraint of(100-300 and 100-200 dp),
+                                Example:
+                                            modifier = modifier.size(300.dp).background(Color.Red).requiredSize(550.dp).background(Color.Green)
+
+                                So, only green color will be visible, not text
+
+            3. Modifier.width, Modifier.height,
+                    • With the width modifier, you can set a fixed width but leave the height undecided.
+                    • with the height modifier, you can set a fixed height, but leave the width undecided:
+                🔸 Scenario:
+                            Box(
+                                modifier = Modifier.width(300.dp)
+                            ) {
+                                Text(
+                                    "Hello",
+                                    modifier = Modifier.width(500.dp).background(Color.Red)
+                                )
+                            }
+
+                     🧯 What Happens?
+                        Even though the child requests 500.dp, the parent only allows 300.dp width.
+                     👉 Result:
+                        Child’s actual width becomes 300.dp, not 500.dp.
+
+            4. Modifier.sizeIn(minWidth, maxWidth, minHeight, maxHeight): The sizeIn modifier lets you set exact minimum
+                        and maximum constraints for width and height. Use the sizeIn modifier if you need fine-grained
+                        control over the constraints.
+
+                     • Behavior: Sets a range of valid sizes for the child.
+                     • Unlike size() (which sets fixed values), sizeIn() lets the child negotiate size within bounds.
+
+                     Example:
+                                Modifier.sizeIn(minWidth = 100.dp, maxWidth = 300.dp)
+                           🔸 Scenario:
+                                • If child requests 50.dp, it becomes 100.dp
+                                • If child requests 350.dp, it becomes 300.dp
+                                • If child requests 200.dp, it stays 200.dp
+
+            5. Modifier.fillMaxWidth(), Modifier.fillMaxHeight(), Modifier.fillMaxSize(fraction):
+
+                    • Behavior: Asks the composable to fill all available space up to the max constraint.
+                    • fillMaxSize(1f) is equivalent to both fillMaxWidth() and fillMaxHeight().
+
+                            If parent allows 300.dp, child becomes 300.dp
+                            If used with fraction: fillMaxWidth(0.5f) → 150.dp
+
+                    💡 Works within parent’s constraints — never exceeds them.
+
+            6. Modifier.wrapContentSize() (and wrapContentWidth/Height())
+
+                    • Behavior: Allows the child to size itself according to its content, ignoring parent’s max
+                                constraints where possible.
+                    • Can be aligned using Alignment.Center, TopStart, etc.
+
+                            If child wants 50.dp, and parent allows 300.dp, it still becomes 50.dp
+
+                    📝 Use when you want content to dictate size, not fill available space.
+
+
+            7. Modifier.defaultMinSize(minWidth, minHeight)
+
+                    • Behavior: Applies a default minimum size only if the composable doesn’t already provide a size
+                                greater than this.
+                    • It’s overridable by other modifiers (unlike size or requiredSize).
+                Example:
+                        Modifier.defaultMinSize(minWidth = 56.dp)
+                    • If composable wants 40.dp, this makes it 56.dp
+                    • If composable wants 80.dp, it stays 80.dp
+                ✅ Useful for components like Button that need a minimum touch target.

@@ -1,0 +1,68 @@
+🧱 Jetpack Compose Architecture Layers
+        +---------------------+
+        |       Material       | ← Material Design system for Compose UI, providing a theming system, styled components, ripple indications, icons
+        +---------------------+
+                    |
+                    |
+                    ↓
+        +---------------------+
+        |       Foundation     | ← Row and Column, LazyColumn etc
+        +---------------------+
+                    |
+                    |
+                    ↓
+        +---------------------+
+        |           UI          | ← ui-text, ui-graphics, ui-tooling,LayoutNode, Modifier, input handlers, custom layouts, and drawing
+        +---------------------+
+                    |
+                    |
+                    ↓
+        +---------------------+
+        |       Runtime         | ← remember, mutablestate, @Composable, etc.
+        +---------------------+
+
+    🔹 1. runtime
+        The core engine of Jetpack Compose.
+            • Handles:
+                • State observation (mutableStateOf, derivedStateOf)
+                • Snapshot system
+                • Recomposition logic
+            • Completely UI-agnostic
+            • Core types: @Composable, Composition, Recomposer, Snapshot, etc.
+
+    🔹 2. ui
+            • Builds on top of runtime.
+            • Provides:
+                • Basic rendering primitives
+                • Layout system (Modifier, Layout, Constraints)
+                • Drawing (Canvas, DrawModifier)
+                • Gesture input, focus, semantics, etc.
+            • Includes:
+                • ui-text,
+                • ui-graphics,
+                • ui-tooling
+
+    🔹 3. foundation
+            • Builds on ui
+            • Adds scrolling, animations, lazy lists, indications, etc.
+            • Helps create custom interactive components.
+        Includes:
+            • LazyColumn, LazyRow, Row, Column
+            • Clickable
+            • Indication, Ripple
+            • Draggable, Scrollable
+            • BasicTextField
+
+    🔹 4. material
+            • Builds on foundation
+            • Implements Material Design components like:
+                    MaterialTextField, Scaffold, TopAppBar, Snackbar etc
+            • Highly opinionated, styled widgets based on Material Design specs
+
+📝 Summary Table
+    Module	        Depends on	        Provides
+    runtime	        —	                State, recomposition, Composable lifecycle
+    ui	            runtime	            Layout, rendering, modifiers
+    foundation	    ui	                Scroll, gesture, lazy lists, animation
+    material	    foundation	        Material Design components
+

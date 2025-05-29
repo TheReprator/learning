@@ -1,0 +1,237 @@
+📌 What is CompositionLocal?
+        CompositionLocal is a way to pass data down the composable tree implicitly (without explicitly passing
+        parameters), similar to context in React or InheritedWidget in Flutter.
+
+        Think of it like a dependency injection mechanism or Broadcast receiver — useful for things like:
+            Themes, typography, Current user, Localization, App configuration
+
+
+        🧱 Built-in CompositionLocals
+            Jetpack Compose already comes with many useful Composition Locals. For instance:
+                LocalContext: Fetches the Android Context inside a composable.
+                LocalSoftwareKeyboardController: Helps you control the software keyboard (show/hide).
+                LocalFocusManager: Manages focus state across composables.
+
+
+        🧱 Understanding Scope: Not Global by Default
+           A crucial point: Composition Locals are not automatically global! They’re scoped to wherever you provide
+           them: Example:
+                    @Composable
+                    fun App() {
+                        // LocalTheme is Dark only in ScreenA's hierarchy
+                        CompositionLocalProvider(LocalTheme provides Theme.Dark) {
+                            ScreenA()
+                        }
+
+                        // ScreenB uses default or throws an error if no default is set
+                        ScreenB()
+
+                        // LocalTheme is Light only in ScreenC's hierarchy
+                        CompositionLocalProvider(LocalTheme provides Theme.Light) {
+                            ScreenC()
+                        }
+                    }
+
+             You can override values deeper down:
+                @Composable
+                fun ScreenA() {
+                    // Using Dark theme from parent
+                    Header()
+
+                    CompositionLocalProvider(LocalTheme provides Theme.Light) {
+                        // Overrides Dark theme
+                        SpecialSection()
+                    }
+
+                    // Back to Dark
+                    Footer()
+                }
+
+
+        Usage Rules
+            • What is .current?
+                • The .current property is how you actually read a value from a CompositionLocal. Think of it as
+                  the "getter" that retrieves the most recently provided value in the composition tree above your
+                  composable.
+
+            • The .current property is synchronized with Compose's composition system
+            • You can’t accidentally access CompositionLocals from background threads because they’re only available
+              in @Composable functions
+            • Changes to CompositionLocal values are always synchronized with recomposition that means all readers
+              see the same value at the same point in the composition
+
+🔹  Pass by Value vs CompositionLocal vs Static CompositionLocal
+        📝 Pass by Value,
+           Example:
+                private val tag = "CompLocal"
+
+                @Composable
+                fun PassByValueDemo() {
+
+                    var counter by remember {
+                        mutableStateOf(-1)
+                    }
+
+                    MyButton(onClick = { ++counter }, text = "PassByValue Demo")
+
+                    if(counter < 0) return
+
+                    Log.d(tag, "************** Pass by Value **************")
+                    Parent(counter)
+                }
+
+                @Composable
+                private fun Parent(value: Int) {
+                    Log.d(tag, "Start Parent - value: $value")
+                    Child(value + 1)
+                    Log.d(tag, "End Parent - value: $value")
+                }
+
+                @Composable
+                private fun Child(value: Int) {
+                    Log.d(tag, "Start Child - value: $value")
+                    GrandChild()
+                    Log.d(tag, "End Child - value: $value")
+                }
+
+
+                @Composable
+                private fun GrandChild() {
+                    Log.d(tag, "Start GrandChild")
+                    Log.d(tag, "End GrandChild")
+                }
+
+                Output:
+                    • Logcat Output - First Composition (first clicked)
+                            ************** Pass by Value **************
+                            Start Parent - value: 0
+                            Start Child - value: 1
+                            Start GrandChild
+                            End GrandChild
+                            End Child - value: 1
+                            End Parent - value: 0
+                    • Logcat Output - Recomposition (second clicked)
+                            ************** Pass by Value **************
+                            Start Parent - value: 1
+                            Start Child - value: 2
+                            End Child - value: 2
+                            End Parent - value: 1
+
+                    Notes: A very important thing to notice is the GrandChild() composable is skipped on 2nd click
+
+        📝 CompositionLocal: Triggers recomposition when the value changes (like state). Changing the value
+                             provided during recomposition invalidates only the content that reads its current
+                             value.
+
+                Example:
+                    private val LocalInt = compositionLocalOf { 0 }
+                    private val tag = "CompLocal"
+
+                    @Composable
+                    fun CompositionLocalDemo() {
+
+                        var counter by remember {
+                            mutableStateOf(-1)
+                        }
+
+                        MyButton(onClick = { ++counter }, text = "CompositionLocal Demo")
+
+                        if(counter < 0) return
+
+                        Log.d(tag, "************** Using CompositionLocal **************")
+                        CompositionLocalProvider(
+                            LocalInt provides counter,
+                        ) {
+                            Parent()
+                        }
+                    }
+
+                    @Composable
+                    private fun Parent() {
+                        Log.d(tag, "Start Parent - LocalInt: ${LocalInt.current} ")
+
+                        CompositionLocalProvider(
+                            LocalInt provides LocalInt.current + 1,
+                        ) {
+                            Child()
+                        }
+
+                        Log.d(tag, "End Parent - LocalInt: ${LocalInt.current}")
+                    }
+
+                    @Composable
+                    private fun Child() {
+                        Log.d(tag, "Start Child - LocalInt: ${LocalInt.current} ")
+
+                        GrandChild()
+
+                        Log.d(tag, "Emd Child - LocalInt: ${LocalInt.current} ")
+                    }
+
+                    @Composable
+                    private fun GrandChild() {
+                        Log.d(tag, "Start GrandChild")
+
+                        Log.d(tag, "End GrandChild")
+                    }
+
+                Output:
+                    • Logcat Output - First Composition (first clicked)
+                            ************** Using CompositionLocal **************
+                            Start Parent - value: 0
+                            Start Child - value: 1
+                            Start GrandChild
+                            End GrandChild
+                            End Child - value: 1
+                            End Parent - value: 0
+                    • Logcat Output - Recomposition (second clicked)
+                            ************** Using CompositionLocal **************
+                            Start Parent - value: 1
+                            Start Child - value: 2
+                            End Child - value: 2
+                            End Parent - value: 1
+
+                Notes: This has same output as pass by value
+
+        📝 Static CompositionLocal: Used when value does not change and should not trigger recomposition.
+
+                                    Unlike compositionLocalOf, reads of a staticCompositionLocalOf are not tracked
+                                    by Compose. Changing the value causes the entirety of the content lambda where
+                                    the CompositionLocal is provided to be recomposed, instead of just the places
+                                    where the current value is read in the Composition.
+
+                Example:
+                    Just replace
+                            private val LocalInt = compositionLocalOf { 0 }
+                        with
+                            private val LocalInt = staticCompositionLocalOf { 0 }
+
+                Output:
+                    • Logcat Output - First Composition (first clicked)
+                            ************** Using Static CompositionLocal **************
+                            Start Parent - value: 0
+                            Start Child - value: 1
+                            Start GrandChild
+                            End GrandChild
+                            End Child - value: 1
+                            End Parent - value: 0
+                    • Logcat Output - Recomposition (second clicked)
+                            ************** Using Static CompositionLocal **************
+                            Start Parent - value: 1
+                            Start Child - value: 2
+                            Start GrandChild
+                            End GrandChild
+                            End Child - value: 2
+                            End Parent - value: 1
+
+                Notes: Outputs are NOT the same as Pass by Value and CompositionLocal. Changes to the
+                       CompositionLocal's value triggers the entire composition tree to be recomposed.
+                                As you can see, GrandChild() composable function is called/recomposed even though
+                       it doesn't access the LocalInt.current value. This is a complete waste of unnecessary
+                       recompositions
+
+💡 Differences between the Subtypes
+    Type	                    Recomposes on Change?	    Use When                                    Usage
+    compositionLocalOf	        ✅ Yes	                    Value changes and UI should reflect it      For dynamic values (e.g., theme color, config)
+    staticCompositionLocalOf	❌ No	                    For constant/global/static values           Value is stable, doesn't need recomposition
+                                                            (e.g., DI, loggers)

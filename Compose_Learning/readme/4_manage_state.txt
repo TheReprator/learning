@@ -1,0 +1,227 @@
+• State in Composable:
+    🧠 What Is State in Compose Runtime?
+        In Jetpack Compose Runtime, state refers to a model of data that is observable, tracked by the Compose
+        compiler and runtime to know when to recompose parts of the UI.
+
+        This is the foundation of Compose’s reactive UI system.
+
+    ⚙️ Key Concepts in Compose Runtime State
+        1. State is observable
+                    val counter = mutableStateOf(0)
+                Here, We are creating an object of type MutableState<Int>, which:
+                    • Holds a value
+                    • Notifies the runtime when the value changes
+                    • Triggers recomposition for any Composable that read it
+        2. Snapshot System
+            Compose uses a snapshot system to track and manage state:
+                • It creates snapshots (versions) of state reads and writes.
+                • It tracks which Composables accessed which state.
+                • On state change, it schedules incremental recomposition.
+            💡 This makes Compose both efficient and thread-safe.
+
+        3. State Readers and Writers
+            Readers: When a Composable reads a State<T>, it becomes subscribed to that state.
+            Writers: When a value is updated, Compose marks all dependent readers for recomposition.
+                Example:
+                        val name = mutableStateOf("Alice") // State writer
+                        Text(name.value)                   // State reader
+                    If you call name.value = "Bob", only the Text(...) Composable will recompose.
+
+        4. State Objects Are Immutable for the UI
+            From the UI’s perspective:
+                • State<T> is read-only.
+                • Only the owner (e.g. ViewModel or Composable) should mutate it using MutableState<T>.
+
+    🧠 Simple Definition
+        Term	            Meaning
+
+        State<T>	        Read-only observable value (exposed to UI)
+        MutableState<T>	    Read + write observable value (used internally or privately)
+
+        Example:
+            1)
+                val count: MutableState<Int> = mutableStateOf(0)
+                val readOnlyCount: State<Int> = count // exposed as State
+
+            2)
+                🔧 Inside a Composable:
+                    var count by remember { mutableStateOf(0) }
+                This is shorthand for:
+                    val countState: MutableState<Int> = remember { mutableStateOf(0) }
+                    val count = countState.value
+
+        • There are three ways to declare a MutableState object in a composable:
+              ✅ 1. val mutableState = remember { mutableStateOf(default) }
+                    • Type: MutableState<T>
+                    • You get the full MutableState object.
+                    • You access/update the value using .value.
+
+                        val mutableState = remember { mutableStateOf(0) }
+                        val value = mutableState.value
+                        mutableState.value = value + 1
+
+                    🟡 Use when: You want to keep a reference to the whole state object.
+
+              ✅ 2. var value by remember { mutableStateOf(default) }
+                    • Uses Kotlin’s property delegation (by) with Delegates.observable.
+                    • This is syntactic sugar around .value.
+
+                            var value by remember { mutableStateOf(0) }
+                            value++  // No need to write value.value++
+
+                    🟢 Use when: You want cleaner syntax for reading/writing state directly.
+                    ✔️ Most common and idiomatic in Composables.
+
+              ✅ 3. val (value, setValue) = remember { mutableStateOf(default) }
+                    This destructures the MutableState<T> into two parts:
+                         • value: current value
+                         • setValue: function to update it (technically, it’s still .value under the hood)
+
+            These declarations are equivalent, and are provided as syntax sugar for different uses of state.
+
+• Stateful vs Stateless composable
+    • Stateful: A composable that uses remember to store an object state, making the composable stateful.
+
+    • Stateless: A stateless composable is a composable that doesn't hold any state. An easy way to achieve
+                 stateless is by using state hoisting.
+
+               A stateless Composable:
+                     • Does not use remember { mutableStateOf(...) } or var x by remember { ... }
+                     • Accepts all dynamic data via parameters
+                     • Reports changes via callbacks
+
+    • State hoisting:
+                1.It is basically a pattern where you move the state of a composable to its caller, making the
+                composable stateless
+
+                2.✅ In Short:
+                 A Composable that uses state hoisting is considered stateless, because it does not own or manage
+                 its own state — it relies entirely on the parent to provide and update state.
+
+               Example:
+                   🔁 Without State Hoisting (Anti-pattern)
+                         @Composable
+                         fun Counter() {
+                              var count by remember { mutableStateOf(0) }
+                              Button(onClick = { count++ }) {
+                                      Text("Count: $count")
+                              }
+                         }
+
+                   Issues:
+                       • State (count) is managed inside the Composable.
+                       • Can't reuse this component with external logic or ViewModel.
+
+                   ✅ With State Hoisting (Best Practice)
+                        @Composable
+                        fun Counter(count: Int, onIncrement: () -> Unit) {
+                           Button(onClick = onIncrement) {
+                               Text("Count: $count")
+                           }
+                        }
+
+                   Now the parent manages state:
+                         @Composable
+                         fun CounterHost() {
+                             var count by remember { mutableStateOf(0) }
+
+                             Counter(count = count, onIncrement = { count++ })
+                         }
+
+               🔄 Benefits
+               | Benefit                  | Explanation                                       |
+               | ------------------------ | ------------------------------------------------- |
+               | Reusability              | You can use the `Counter` in any screen           |
+               | Testability              | Easier to test UI behavior without internal state |
+               | Single source of truth   | Parent owns the state, child just displays it     |
+               | Unidirectional data flow | Data flows down, events go up                     |
+
+                ✅ Rule of Thumb
+                Any Composable that reads or updates state should not own it — it should receive it from its parent.
+
+
+🔄 Ways to store state in Compose(Ways to store state into bundle)
+    1. Parcelize:
+            @Parcelize
+            data class City(val name: String, val country: String) : Parcelable
+
+            @Composable
+            fun CityScreen() {
+                var selectedCity = rememberSaveable {
+                    mutableStateOf(City("Madrid", "Spain"))
+                }
+            }
+    2. MapSaver:
+            data class City(val name: String, val country: String)
+
+            val CitySaver = run {
+                val nameKey = "Name"
+                val countryKey = "Country"
+                mapSaver(
+                    save = { mapOf(nameKey to it.name, countryKey to it.country) },
+                    restore = { City(it[nameKey] as String, it[countryKey] as String) }
+                )
+            }
+
+            @Composable
+            fun CityScreen() {
+                var selectedCity = rememberSaveable(stateSaver = CitySaver) {
+                    mutableStateOf(City("Madrid", "Spain"))
+                }
+            }
+
+    3. ListSaver:  To avoid needing to define the keys for the map, you can also use listSaver and use its indices
+                   as keys:
+
+            data class City(val name: String, val country: String)
+
+            val CitySaver = listSaver<City, Any>(
+                save = { listOf(it.name, it.country) },
+                restore = { City(it[0] as String, it[1] as String) }
+            )
+
+            @Composable
+            fun CityScreen() {
+                var selectedCity = rememberSaveable(stateSaver = CitySaver) {
+                    mutableStateOf(City("Madrid", "Spain"))
+                }
+            }
+
+🧠 What is a Plain State Holder?
+    A Plain State Holder is a non-UI Kotlin class that:
+        • Holds and exposes Compose state (like MutableState, State, SnapshotStateList, etc.)
+        • Is not a Composable function
+        • Is responsible only for business/UI state logic
+
+    When a composable contains complex UI logic that involves one or multiple state fields of a UI element,
+    it should delegate that responsibility to state holders, like a plain state holder class. This makes the
+    composable's logic more testable in isolation, and reduces its complexity.
+
+    Example:
+        @Stable
+        class MyAppState(
+            private val windowSizeClass: WindowSizeClass
+        ) { /* ... */ }
+
+        @Composable
+        private fun rememberMyAppState(
+            windowSizeClass: WindowSizeClass
+        ): MyAppState {
+            return remember(windowSizeClass) {
+                MyAppState(windowSizeClass)
+            }
+        }
+
+        Here, MyAppState is a plain state holder. rememberMyAppState function  is used to initialize an instance
+        of the State Holder class(MyAppState) using remember. Exposing such functions to create an instance that
+        survives recompositions is a common pattern in Compose. The rememberMyAppState function receives
+        windowSizeClass, which serves as the key parameter for remember. If this parameter changes, the app needs
+        to recreate the plain state holder class with the latest value. This may occur if, for example, the user
+        rotates the device
+
+Keeps Composables stateless and focused on rendering
+🔄 Ways to survive recomposition
+        API	                    Purpose
+
+        remember	            Retains the state across recompositions
+        rememberSaveable	    Like remember, but survives process death

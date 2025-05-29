@@ -1,0 +1,14 @@
+// State read without property delegate.
+val paddingState: MutableState<Dp> = remember { mutableStateOf(8.dp) }
+Text(
+    text = "Hello",
+    modifier = Modifier.padding(paddingState.value)
+)
+
+
+// State read with property delegate.
+var padding: Dp by remember { mutableStateOf(8.dp) }
+Text(
+    text = "Hello",
+    modifier = Modifier.padding(padding)
+)

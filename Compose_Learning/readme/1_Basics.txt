@@ -1,0 +1,86 @@
+Restart(Recompose): Means a fresh copy of composable(It was earlier there, but due to state or call site change,
+                    it was compelled to draw itself again in node tree)
+
+Compose: First occurrence of composable in Tree
+
+Call side: The call site is the source code location in which a composable is called.
+                                        The instance of a composable in Composition is identified by its call site. The
+        Compose compiler considers each call site as distinct. Calling composables from multiple call sites will create
+        multiple instances of the composable in Composition.
+
+Tips to improve performance:
+    1) Use key composable, to uniquely identify each element within a composable like below,
+            @Composable
+            fun MoviesScreenWithKey(movies: List<Movie>) {
+                Column {
+                    for (movie in movies) {
+                        key(movie.id) { // Unique ID for this movie
+                            MovieOverview(movie)
+                        }
+                    }
+                }
+            }
+
+    2) Skipping
+        a) A composable function is eligible for skipping unless:
+            • The function has a non-Unit return type
+            • The function is annotated with @NonRestartableComposable or @NonSkippableComposable
+            • A required parameter is of a non-stable type
+        b) Enable Strong skipping via build.gradle
+        c) Stable Type, If a parameter is stable and unchanged, Compose skips recomposition for better performance.
+            🧩 What is a Stable Type?
+            A stable type is a data type that:
+                a.1) Has predictable behavior when checking for equality (== or .equals()).
+                a.2) Does not change its internal state without notifying Compose.
+                a.3) Helps Compose decide whether to recompose a Composable or skip it.
+
+            ✅ A Type is Stable If:
+                • It is a primitive (e.g. Boolean, Int, Long, Float, Char).
+                • It is a data class with only stable fields.
+                • It uses Compose’s @Stable or @Immutable annotations.
+                • It doesn’t override equals() or hashCode() in a way that breaks Compose's expectations.
+                • All function types (lambdas)
+
+             ✅ Valid stable types:
+                 • data class User(val name: String, val age: Int) // ✅ Stable by default
+
+                 • @Stable
+                   class Counter {
+                     var value: Int by mutableStateOf(0)
+                   }
+
+                 • @Immutable
+                   data class UiState(val loading: Boolean, val data: String)
+
+                 • class MyClassStable(val counter: Pair<Int, Int>)
+
+             🛑 Unstable Type Example
+
+                • class MyClassUnstable(val counter: Pair<LocalDate, LocalDate>)
+                        as LocalDate is not of primitive type
+
+                • class MyClassUnstable(val counter: Pair<*, *>)
+                        as pair data is generic and not of primitive type
+
+                • class User { // ❌ Not a data class, no equals/hashCode
+                    var name: String = ""
+                    var age: Int = 0
+                  }
+
+                • data class MutableUser(var name: String, var age: Int) // ❌ Not stable because var fields can change silently
+
+
+             🔧 How to Make a Type Stable
+                    • Use val instead of var whenever possible.
+                    • Use @Immutable for data classes with only stable types.
+                    • Use @Stable if you’re using mutable state inside a class.
+
+                ✅ @Immutable → for read-only data (safe, deeply checked)
+                ✅ @Stable → for mutable objects that use mutableStateOf internally and inform Compose of changes
+
+        d) When all types passed as parameters to a composable are stable, the parameter values are compared for equality
+           based on the composable position in the UI tree. Recomposition is skipped if all the values are unchanged since
+           the previous call.
+
+LifeCycle of composable:
+        ./pictures/lifecycle.png
