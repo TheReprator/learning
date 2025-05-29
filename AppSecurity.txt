@@ -1,0 +1,122 @@
+Securing Android Application:
+        📌 1) Protecting Your App from Reverse Engineering & Debugging
+                • Anti-Developer-Options: Check developer is enabled or not
+                • Anti-Debugging: Detect debuggers at runtime
+                • Anti-Root Detection: The key to most attack starts with obtaining privileged access as an admin or root user. Therefore, we must protect our 
+                                       application by implementing root detection
+                • Obfuscation: It is basically a process to change the name of file, variable to some random, to make to it difficult for reverse decoding or decompilation.
+                               Android offers open-source obfuscation tools such as ProGuard and R8, as well as more advanced paid options like DexGuard
+                • Anti-Tampering: 
+                                 • Google Play Integrity API: It helps you check that interactions and server requests are coming from your genuine app binary running 
+                                                             on a genuine Android device. 
+
+                                        • Genuine app binary: Determine whether you're interacting with your unmodified binary that Google Play recognizes.
+                                        • Genuine Play install: Determine whether the current user account is licensed, which means that the user installed or paid for 
+                                                                your app or game on Google Play.
+                                        • Genuine Android device: Determine whether your app is running on a genuine Play Protect certified Android-powered device 
+                                                        (or a genuine instance of Google Play Games for PC).
+
+                                 • APK Signature Verification: 
+                                                        • It ensures that an app hasn't been tampered with. The process involves using the Android Open Source 
+                                                          Project's APK signature scheme to verify the APK's integrity, including resources, code, and ZIP metadata. 
+
+                                                        • Any modification to the APK, including ZIP metadata, invalidates the signature, preventing installation or operation 
+                                                          of the tampered app. 
+
+                                                        • It is recommended to perform this check on a remote server by sending the current certificate signature 
+                                                           and comparing it on the server side.
+
+                                • useEmbeddedDex: It is used to control how dex files are loaded in an app, particularly for apps that use custom class loading (such as 
+                                                  plugin frameworks, multi-process apps, or dynamic feature loading).
+                                                                It tells the Android system: "Do not optimize or transform dex files for this app. Keep them in raw .dex 
+                                                  format inside the APK."
+
+
+                                                🔹 What Problem Does It Solve?
+                                                        By default, starting from Android 8.0 (API level 26), the Android runtime uses a mechanism called dex compression and optimization, such as CompactDex and other performance-focused formats, to optimize dex loading.
+
+                                                        This is great for performance, but it breaks custom class loading scenarios where apps expect to load .dex files directly from APK assets or external locations — because the dex files might not be stored in their raw, expected format anymore.
+
+                                                ⚠️ Downsides
+                                                        • Performance impact: Dex files are not optimized (no OAT/ART pre-compilation).
+                                                        • Increased memory usage and slower startup due to lack of optimizations.
+
+                                                ✅ Use it only when you rely on manual dex/class loading, and are targeting Android 8.0+ where the default dex optimizations might break your logic and will be applicable from android 10(Api 29) and above.
+
+                                                🔁 How to use it:
+
+                                                        // In the application element of the app's manifest file
+                                                        android::useEmbeddedDex = true
+
+                                                        // In the module-level build.gradle.kts file (or build.gradle file if using Groovy)
+                                                        packagingOptions {
+                                                                dex {
+                                                                        useLegacyPackaging = false
+                                                                }
+                                                        }
+
+                📌 2) Securing Execution Environment
+                        • Anti-Emulation: It is a techniques aim to prevent malware or protected applications from being reverse-engineered, debugged, or otherwise analyzed 
+                                          by unauthorized parties often by using emulators or sandboxes.
+
+                                          So here, we check for emulation like, the app should not be running on emulator, simulator or sandboxes or custom phone
+                        • Anti-Sideloading: Restrict APK installation from untrusted sources, we recommand to download the application from Google play by checking the 
+                                            vendor application.
+
+                        • Anti-Multiwindow: Prevent multi-window mode to avoid overlay attacks, if it is possible, as we are en era of foldables and adaptive
+
+                📌 3)  Preventing Data Leakage & Unauthorized Access
+                        • Log Protection: Avoid logging data in Prod
+                        • Secure Database & Preference: We can use SQLCipher for encrypted database storage or save encrypted data directly in your 
+                                DB and EncryptedSharedPreferences for shared Preference
+                        • Secure Binding Services: 
+                                        • set exported to false in manifest to respective android components, if we do not want to share anything with external vendors
+                                        • Take care of binding flag, when using services or AIDL
+
+                        • Anti-Screenshot & Overlay Detection:
+                                        Use FLAG_SECURE to block screenshots and to block overlays using this flag permission android.permission.HIDE_OVERLAY_WINDOWS(introduced in Android 12). For oldest Android version, we can implement a custom solution to inject event in random touch and intercept it
+
+                        • Anti-Camera & Microphone Abuse: Restrict background access using Android 10+ APIs and put some mechanism detection when camera is open and used 
+                                        by another threat application
+
+                        • Anti-Accessibility Exploits: Stop accessibilty for views that contain sensitive information like balace, CVV, Account No. etc.
+
+                📌 4) Strengthening Authentication & Secure Communication
+                        • Biometric Authentication: Biometric API exist for strong user authentication like fingerprint, face, or iris which be used to verify the identity of 
+                                                the user before doing any transaction.
+
+                        • Secure Connection (TLS/SSL)
+
+                        • HTTPS/SSL Security: To prevent Man-in-the-Middle (MITM) attacks, Android 7 (API 24) introduced the Network Security Config
+                        • API Key Protection: 
+                                • Gradle Properties or enviorment variables, and make sure that is not part of git commit
+                                • Use NDK to store API-KEY inside a “.cpp” file.
+
+                📌 5) Secure Cryptography & Key Management
+                        • Secure Cryptography: 
+                        • Key Rotation: Programming security is time-sensitive, and in this context, cryptographic keys must be regularly updated to mitigate potential risks. 
+                                It is recommended not to exceed a 90-day lifespan for secure keys to ensure optimal protection.
+                        • Use Secure Random: 
+
+                📌 6) Enhancing System Security & Updates
+                        • Secure Elements & TEE (Trusted Execution Environment): As said in the last point, Android Keystore should be generated on Trusted Execution 
+                           Environment (TEE) storage backed in StrongBox introduced in Android 9 (for lowest version, we can use software white box but it’s must be respect the security standard).
+
+                        • GMS Security Updates: Google provides GMS (Google Mobile Services), which checks for any security updates. To verify this, we should check 
+                                the currently installed version of Google Play Services
+
+                        • Backup Security:
+                                In Android, to retrieve your preferences after reinstalling an application, we use the backup mechanism. However, this represents a security issue, which is why it has been deprecated starting from Android 12 and may be removed in future versions. We recommend disabling auto-backups for sensitive data by setting android:allowBackup="false"
+
+                        • CVE Patching & Dependency Updates:
+                                In Android, we have a higher probability to use third party library which can represent a vulenrability risk, so before integrating any library, we must check the origin , the maintainers community, the latest support date .. and after that we should regularly update and check for CVEs and finally use only Stable version.
+
+                📌 7) Advanced Security Techniques
+                        • Secure OpenGL: When using OpenGl, use the flag "EGL_PROTECTED_CONTENT_EXT" to protect rendering data to be read illegaly from the RAM memory
+                        • Multiprocess Security: Try to run the service or Android component in a separte process via manifest, This helps to prevent unauthorized access
+                                 by ensuring that each process operates in a separate environment, making it more difficult for one process to access the memory or data of another
+
+
+References:
+        https://medium.com/@sofienrahmouni/securing-android-behind-a-few-seconds-of-payment-transaction-bf6817119d51
+        https://developer.android.com/privacy-and-security/security-best-practices

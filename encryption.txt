@@ -1,0 +1,237 @@
+🔐 What is Cryptography?
+		Cryptography is the science of securing information. It includes:
+			• Encryption: Making data unreadable to unauthorized users.
+			• Decryption: Reversing encryption to restore original data.
+			• Hashing: One-way transformation (e.g., for password storage).
+			• Digital signatures: Verify identity and integrity.
+			• Key management: Generating and storing keys securely.
+
+
+		Think of cryptography as the toolbox; encryption is just one tool inside it.
+
+
+✅ Are Cryptography and Encryption the Same?
+		❌ Not the same, but encryption is a subset of cryptography.
+		🔁 They are used together in secure systems.
+
+
+🔒 What is Encryption?
+			Encryption is a specific cryptographic method that transforms readable data (plaintext) into unreadable data (ciphertext) using a key.
+					• Symmetric encryption: Same key for encryption/decryption
+
+							1)🛠 Step-by-Step: Symmetric Encryption
+								🔹 1. Original Message (Plaintext)
+										This is your actual data, like a chat message or password.
+											🔸 Example: "Hi, this is secret!"
+								🔹 2. Generate a Secret Key
+										A random key is generated that both sender and receiver must share securely. This key is usually 128, 192, or 256 bits long.
+											🔸 Example: Key = "7hfK9xLp2X!v$3lq"
+								🔹 3. Choose an Encryption Algorithm (Cipher)
+										Pick a symmetric algorithm like AES (block cipher) or ChaCha20 (stream cipher).
+											🔸 Example: AES with 128-bit key in GCM mode.
+								🔹 4. Encrypt the Message
+										Using the cipher and key, the plaintext is converted into unreadable data (ciphertext).
+											🔸 Encrypted Output: uJ2G9s#90d9Jlw3cZ9yU3Q==
+								🔹 5. Transmit or Store Ciphertext
+										Send the encrypted data over a network or store it in a file/database.
+											🔸 The message is now protected—even if someone intercepts it, they can’t read it without the key.
+								🔹 6. Receiver Decrypts the Message
+										Receiver uses the same key and cipher to decrypt and get the original plaintext.
+											🔸 Decrypted Message: "Hi, this is secret!"
+
+							2. 🔄 Cipher — "How You Lock or decrypt it"
+								Two main ways to encrypt using the key:
+									🔐 1. Block Cipher
+										• Breaks the data into fixed-size chunks (blocks) like 128 bits.
+										• Encrypts each block — one after the other.
+										• Example: AES is a block cipher.
+										• Needs padding if data isn’t exactly divisible by block size.
+										• Block Size: 128 bits
+										• Key Sizes: 128, 192, 256 bits
+										• Mode of Operation: Often used with CBC, GCM, etc.
+										• Speed: Fast, especially with hardware acceleration (AES-NI)
+										• Security: Industry-standard, well-studied, very secure
+										• Use Cases: Disk encryption, TLS (HTTPS), Android file encryption, WhatsApp, Signal
+
+
+									🔐 2. Stream Cipher
+										• Encrypts one byte or bit at a time.
+										• Ideal for real-time data like voice/video.
+										• Example: ChaCha20.
+										• Block Size: N/A (stream cipher = byte-by-byte)
+										• Key Size: 256 bits
+										• Nonce Size: 96 bits
+										• Speed: Extremely fast in software (especially on mobile CPUs)
+										• Security: Highly secure, even resistant to timing attacks
+										• Use Cases: Preferred for mobile apps, TLS in Chrome, Android, OpenSSH, VPNs
+
+
+								📊 Side-by-Side Comparison
+									Feature						AES									ChaCha20
+
+									Type						Block cipher						Stream cipher
+									Key Size					128/192/256 bits					256 bits
+									Speed						Hardware fast						Software fast
+									Platform Optimization		Optimized for Intel chips			Optimized for mobile (ARM CPUs)
+									Security					Very secure	Equally secure, 		newer
+									Timing-attack safe			Only in constant-time mode			Yes (default)
+									Use in Android				File, DB, message encryption		VPNs, TLS, fast messaging
+
+								🏁 Summary
+										• Use AES when you need hardware acceleration and compatibility.
+										• Use ChaCha20 when you need high speed in software (especially on Android phones).
+
+
+								🔑 Key Size vs. 📦 Block Size – Simple Explanation with Example
+									Term		What It Means										Simple Example
+									
+									Key Size	The length of the secret key used for encryption	Like a 256-digit lock combination
+									Block Size	The size of each chunk of data encrypted at once	Like cutting a message into 16-byte blocks
+
+								🔧 Example (AES-256):
+									Key Size: 256 bits → stronger encryption
+									Block Size: 128 bits → plaintext is split into 128-bit (16-byte) blocks
+							
+								Even if key = 256 bits, AES always encrypts 128-bit chunks of data.
+
+								🧩 What is a Nonce (96 bits)?
+										• Nonce = "Number used once"
+										  A 96-bit nonce (12 bytes) is a unique, random value added to the key to ensure different keystreams every time, even if the same key is reused.
+
+										• It's not secret, but must never repeat for the same key.
+										  Think of it as a random seed for generating a new stream of pseudo-random numbers securely.
+
+									💡 Why It Matters
+										Using the same key + nonce combination again in a stream cipher would leak information, so the nonce ensures uniqueness per message.
+
+
+							🔢 What is 128, 192, or 256 bits in Encryption?
+									These numbers refer to the size of the encryption key, i.e., how long and complex the secret key is that encrypts/decrypts data in symmetric encryption algorithms like AES.
+
+
+							🧠 In Simple Terms:
+									• A 128-bit key is like a password that's 128 "1s or 0s" long.
+									• A 256-bit key is even longer and more secure—it has 2¹²⁸ vs 2²⁵⁶ combinations.
+							🔐 More bits = more security = harder to crack, but slightly slower.
+
+
+							🔒 In Technical Terms:
+									• 128-bit key: 2^128 possible keys → ~3.4 x 10³⁸ combinations
+									• 192-bit key: 2^192 → ~6.3 x 10⁵⁷ combinations
+									• 256-bit key: 2^256 → ~1.1 x 10⁷⁷ combinations
+							A brute-force attack on a 256-bit key is computationally infeasible with current technology.
+
+
+							🔐 What is Padding in Encryption?
+									Padding is the process of adding extra bytes to plaintext to make its length a multiple of the block size required by block ciphers (like AES, which uses 16-byte blocks).
+
+
+							📦 Why is Padding Needed?
+									Block ciphers can't encrypt partial blocks. So if your data isn't exactly 16, 32, or 64 bytes (depending on the algorithm), padding fills in the gap.
+
+							🧠 Example:
+									If plaintext = 23 bytes, and block size = 16 bytes → 23 is not a multiple of 16 → padding needed to make it 32 bytes (2 blocks of 16).
+
+							🔢 Common Padding Schemes:
+									Padding Type	Description
+									PKCS#5/PKCS#7	Fills missing bytes with the value of how many were added.
+									Zero Padding	Fills with 0x00. Not recommended for text (could be confused with real zeroes).
+									ISO/IEC 7816-4	Adds 0x80 followed by 0x00s.
+
+					   		⚠️ Note:
+								• Padding is not needed for stream ciphers like ChaCha20.
+								• Some modes like AES-GCM or AES-CTR don’t require padding either.
+
+
+						3. Android Example:
+									import javax.crypto.Cipher
+									import javax.crypto.KeyGenerator
+									import javax.crypto.spec.IvParameterSpec
+									import java.util.Base64
+									import kotlin.random.Random
+
+									fun main() {
+    									// 1. Generate 256-bit AES key (32 bytes)
+    									val keyGen = KeyGenerator.getInstance("AES")
+    									keyGen.init(256) // 256-bit key
+    									val secretKey = keyGen.generateKey()
+
+    									// 2. Create random IV (AES block size = 16 bytes = 128 bits)
+    									val iv = ByteArray(16) // 128-bit block size
+    									Random.nextBytes(iv)
+    									val ivSpec = IvParameterSpec(iv)
+
+    									// 3. Prepare Cipher with AES/CBC/PKCS5Padding
+    									val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
+    								
+    									val plaintext = "This is a secret message."
+									    println("Original: $plaintext")
+
+    									// 4. Encrypt
+    									cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivSpec)
+    									val encrypted = cipher.doFinal(plaintext.toByteArray())
+    									val encryptedBase64 = Base64.getEncoder().encodeToString(encrypted)
+    									println("Encrypted (Base64): $encryptedBase64")
+
+    									// 5. Decrypt
+    									cipher.init(Cipher.DECRYPT_MODE, secretKey, ivSpec)
+   										val decrypted = cipher.doFinal(encrypted)
+    									println("Decrypted: ${String(decrypted)}")
+								}
+
+
+					• Asymmetric encryption: Public key to encrypt, private key to decrypt.
+
+							1)🛠 Step-by-Step: Assymmetric Encryption
+									a. Key Pair Generation
+										Generate two keys:
+											• Public Key (shared openly)
+											• Private Key (kept secret)
+									b. Sharing the Public Key
+											• You send your public key to others.
+											• They can now send you encrypted data, but only you can decrypt it.
+									c. Encryption
+											• The sender uses your public key to encrypt the message.
+											• Once encrypted, only your private key can decrypt it.
+									d. Decryption
+											• You use your private key to decrypt the message.
+
+							2)🛡 Used In:
+									TLS/SSL (HTTPS)
+									Messaging apps (to exchange symmetric keys securely)
+									Digital signatures
+									Email encryption (e.g., PGP)
+
+							3) In asymmetric encryption, there is no fixed block size like in symmetric block ciphers (e.g., AES). Instead, the size of the data you can encrypt 		depends on the key size.
+
+									📏 Examples:
+											• RSA 2048-bit key: Can encrypt up to 245 bytes (not 256) using PKCS#1 padding.
+											• RSA 4096-bit key: Can encrypt up to 501 bytes.
+
+									This limitation is why asymmetric encryption is not used for bulk data, only for encrypting small pieces of information (e.g., symmetric keys, hashes).
+
+									Asymmetric algorithms, such as RSA, can be up to an order of magnitude slower than symmetric algorithms. When using RSA keys to encrypt data, the ciphertext is always the size of the key; if your RSA key is 2048 bits (or 256 bytes), then the ciphertext is also 256 bytes. And because PKCS #1 padding is always used with RSA keys, you can encrypt no more than the key size, less eleven. For example, if you use a 2048-bit RSA key, the maximum data size that you can encrypt with that key is 245 bytes.
+
+									The speed and size issues make public key cryptography impractical for encrypting data. Therefore, we recommend that you use symmetric key algorithms to encrypt your data.
+
+			⚙️ 3. Technical Comparison
+				Feature				Symmetric											Asymmetric
+
+				Speed				Faster (lightweight)								Slower (computationally heavy)
+				Security Level		Very secure (if key managed properly)				Secure + easier key exchange
+				Use Case Scope		Bulk data encryption								Secure key exchange, digital signatures
+				Examples			AES, DES, ChaCha20, IDEA							RSA, ECC, DSA
+				Key Management		Hard to share securely								Easier to distribute public key
+				Algorithm Type		Mathematical substitutions & permutations			Based on number theory (e.g., prime factorization)
+
+
+			💬 4. Real-World Use Cases
+				Use Case						Symmetric												Asymmetric
+
+				Messaging (Signal, WhatsApp)	Encrypt messages after handshake						Exchange encryption keys at start (X3DH)
+				File Encryption					Android File-Based Encryption (AES)						Not used directly (too slow for files)
+				SSL/TLS Handshake				Encrypt session after handshake							Initial handshake and certificate validation
+				Digital Signatures				❌ Not used												✅ Used (Private key signs, public verifies)
+
+Refrences:
+	https://danielangel22.medium.com/step-by-step-guide-to-encrypt-and-decrypt-data-with-aes-in-java-2baf4343be60
