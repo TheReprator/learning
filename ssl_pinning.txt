@@ -5,7 +5,7 @@
 	In reality, sending data over the internet is more like a game of telephone, where each party whispers the message to the next until it reaches your intended recipient. You 	have no idea how many people heard your message along the way or what they’re doing with it.
 
 		This graphic shows the actual route data took when sent between Harvard researchers in Ghana and Mongolia:
-			image source: Downlads/vikram/communication.png
+			image source: ./pictures/communcation.png
 
 
 A brief history into time:
