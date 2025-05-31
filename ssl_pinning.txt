@@ -1,0 +1,292 @@
+🤔You might be wondering how anyone would spy on the data you’re sending over the internet. If I’m submitting something to amazon.com, how would anyone else even have the opportunity to see that? I’m sending it directly to amazon.com, right?
+	Most people think that sending information online works something like directly communicating with end customer like amazon.com in this case
+		be me like “I’m talking directly to the other party, and there’s nobody else around to hear…right?” Not quite.
+
+	In reality, sending data over the internet is more like a game of telephone, where each party whispers the message to the next until it reaches your intended recipient. You 	have no idea how many people heard your message along the way or what they’re doing with it.
+
+		This graphic shows the actual route data took when sent between Harvard researchers in Ghana and Mongolia:
+			image source: Downlads/vikram/communication.png
+
+
+A brief history into time:
+
+HTTP vs. HTTPS – Explained for Developers:
+	HTTP (HyperText Transfer Protocol) transmits data in plain text — meaning it's readable by anyone intercepting it (like on public Wi-Fi). It doesn’t provide data encryption, authentication, or integrity.
+
+	HTTPS (HTTP Secure) adds TLS encryption on top of HTTP. It ensures:
+			• Data privacy via encryption
+			• Server authentication via digital certificates
+			• Data integrity (no tampering in transit)
+
+🔐 In short: HTTPS = HTTP + Security
+
+	
+🧪 Live Example
+		Let’s say you’re logging in to your bank:
+
+		Without HTTPS (HTTP):
+				• Your login request goes as plain text.
+				• A hacker on the same Wi-Fi could capture your username and password.
+
+		With HTTPS:
+				• Before sending your password, the browser and bank server perform a TLS handshake.
+				• Your password is then encrypted and securely sent.
+				• A hacker intercepting it would see something like:
+					38a1d9f2b9d3a8e02d9813... (which is useless without the decryption key)
+
+
+How HTTPS Works Under the Hood: HTTPS Runs on PKI
+	Before we can dive deeper into how HTTPS works, we need to go over a few technical details of the system that HTTPS, SSL, and TLS are all built on top of — public key infrastructure, or PKI. Just like your car runs on an internal combustion engine, HTTPS and TLS/SSL run using PKI.
+
+	PKI is a security framework that enables secure, encrypted communication and identity verification over the internet. It consist of 5 main components as follows,
+
+		1) Digital certificates:
+				A digital certificate (like an SSL certificate) is a file that proves the identity of a website or system.
+						• Contains: public key, owner info, issuing CA, expiration date, etc.
+					• Example: When you visit https://google.com, your browser checks the site's certificate to verify it's really Google.
+
+		2) Public & private key pairs:
+				These are cryptographic keys used to encrypt and decrypt data. It uses both asymmetric and symmetric encryption
+						• Public key: Shared with others to encrypt messages.
+						• Private key: Kept secret by the owner to decrypt.
+					• Example: When someone sends you a message encrypted with your public key, only you (with your private key) can read it.
+			
+		3) Certificate authorities.
+				CAs are trusted organizations that issue and sign digital certificates.
+						• They verify the identity of certificate requesters.
+						• Example: Let’s Encrypt, DigiCert, and GlobalSign are CAs. When your website gets an SSL certificate, it’s issued by a CA.
+
+					• Without CAs, PKI simply wouldn’t work because anybody can impersonate like amazon or bill gates
+		4) Digital signatures.
+				A digital signature is a cryptographic way to prove authenticity and integrity of data.
+						• Ensures the data or certificate wasn’t altered.
+					• Example: A CA digitally signs a certificate. Your browser checks this signature to make sure it hasn't been tampered with.
+		5) Root stores.
+				A root store is a list of trusted root CA certificates, embedded in operating systems and browsers.
+						• Forms the base of trust for verifying certificate chains.
+						• Root CAs in the root store are pre-installed by OS vendors (e.g., Google, Apple, Microsoft).
+					• Example: Your phone has a built-in root store. When visiting a secure website, it checks if the certificate’s root CA is in that list.
+
+
+The HTTPS Process: Step by Step
+
+		⚠️ Note: The following flow is valid only for TLS 1.3 as the step will vary for 1.2 and below
+
+		1) 🛠 Step-by-Step Breakdown of the Full TLS(1.3) Handshake:
+				🔹 1. Client Hello
+						• Supported TLS version (TLS 1.3)
+						• Supported cipher suites
+						• Random number (client_random)
+						• Its ephemeral ECDHE public key (for key exchange)
+
+				🔹 2. Server Hello
+						• Server replies with:
+								• Chosen cipher suite
+								• Random number (server_random)
+								• Its ephemeral ECDHE public key
+								• Its digital certificate (for authentication)
+
+				🔹 3. Certificate Verification
+						• The client verifies:
+								• The certificate is signed by a trusted CA (using asymmetric crypto and root store)
+								• The cert is for the correct domain (e.g., amazon.com)
+								• It's not expired or revoked
+						✅ This step authenticates the server identity using asymmetric encryption
+
+				🔹 4. Key Exchange or Agreement (ECDHE) → Symmetric Key Derivation
+						• Both client and server now:
+								• Their own private ephemeral key
+								• Have each other's ephemeral public key
+								• Use ECDHE math to derive a shared secret
+								• Combine shared secret + randoms → derive symmetric session keys
+					🟡 ⚠️ This is the exact moment asymmetric becomes symmetric
+					👉 The session key is never sent — it’s calculated independently on both sides.
+
+
+				🔹 5. Finished Messages
+						• Each party sends a Finished message encrypted using the new symmetric key
+								• This proves:
+										• They both derived the same key
+										• They’re ready for encrypted communication
+
+
+				🎯 Key Point:
+					• The asymmetric exchange (ECDHE) never transmits the symmetric key. Instead, it helps both sides independently compute a shared secret, which is then 
+					   used to derive symmetric keys.
+
+				🧠 Why It’s Secure:
+					• No symmetric key is sent over the network
+					• Perfect forward secrecy is achieved (ephemeral keys are thrown away after session)
+
+		⚡ 2) Subsequent Requests: Fast Encrypted Sessions
+				After the handshake:
+					• Your browser uses the established session key to encrypt everything: product pages, your cart, payment info.
+					• The full certificate chain isn’t reverified each time — instead, a resumed session or TLS ticket is used for speed.
+
+
+🚫 Problem with only using HTTPS : Overtrusting Certificate Authorities (CAs)
+		When your app/browser verifies an HTTPS certificate, it does so against a list of trusted root CAs, which is stored in:
+				• The operating system (Android/iOS/Windows/macOS)
+				• Or the browser itself (like Firefox, which uses its own root store)
+		By default, your device trusts dozens of CAs worldwide.
+
+
+	🧨 The Attack Vector: Custom or Malicious Root CAs
+			Here’s where things go wrong:
+					👨‍💻 1. Rooted or Compromised Device
+							• An attacker (or the user) installs a custom root certificate (e.g., from Burp Suite).
+							• This certificate is now considered “trusted” by the OS.
+
+					🕵️‍♂️ 2. Intercepting Traffic
+							• The attacker (or a proxy tool like Burp/ZAP) intercepts HTTPS traffic.
+							• They generate fake certificates for any site (like bank.com) and sign them using the installed root cert.
+
+					✅ 3. Browser/App Accepts the Fake Cert
+							• Because the fake cert chains up to a trusted (but malicious) root, your app accepts it as valid.
+							• Result: attacker can read or alter all HTTPS data — this is a man-in-the-middle (MITM) attack.
+
+
+
+			🚫 Problem with only using HTTPS
+						Your app/browser trusts any CA in the OS or browser trust store. If an attacker tricks the OS or device into trusting a malicious certificate, 
+						they can intercept traffic (e.g., using Burp Suite or custom root certs on rooted devices).
+
+
+🛡 Solution: SSL/TLS Pinning (public key pinning /certificate pinning/SSL pinning)
+		SSL pinning defends against this by hardcoding the server’s certificate (or public key) into your app. So even if the system trusts a malicious CA, the app will reject any cert that doesn't match the pinned one.
+
+	🔐 What is SSL Pinning?
+			• SSL Pinning (also known as Certificate Pinning) is a technique used in mobile apps to protect against man-in-the-middle (MITM) attacks by making sure the 
+			  app connects only to trusted servers using known SSL certificates.
+
+			• SSL pinning defends against this by hardcoding the server’s certificate (or public key) into your app. So even if the system trusts a malicious CA, the app 
+			  will reject any cert that doesn't match the pinned one.
+
+			• SSL and TLS are not the same, but they are closely related. TLS (Transport Layer Security) is the successor to SSL (Secure Sockets Layer), and is a more 
+			  secure and modern protocol. While the term "SSL" is still widely used in common language, it's important to understand that "SSL" in this context often refers to the TLS protocol, as SSL is now deprecated due to security vulnerabilities. 
+
+
+    There are 2 main types of SSL pinning used in apps to ensure the client only trusts specific certificates or public keys:
+    	✅ 1. Certificate Pinning
+				• You pin the entire certificate (X.509)
+				• Breaks if the certificate changes (e.g., renewal)
+
+				Advantages:
+					• Easy to implement (just store the full cert)
+					• Strong protection if cert is not rotated often
+				Disadvantages:
+					• Breaks if certificate is renewed or reissued (even by same CA)
+					• Requires frequent app updates if certs change
+
+
+		✅ 2. Public Key Pinning
+				• You pin only the public key inside the certificate
+				• Survives certificate renewals as long as the public key stays the same
+
+				Advantages:
+					• More resilient to cert renewals (if key remains unchanged)
+					• Reduces the need for app updates
+					• Strong protection against MITM
+
+				Disadvantages:
+					• Slightly more complex to extract and manage key hashes
+					• Still breaks if key pair is rotated
+
+				Example: OkHttp and CertificatePinner
+						val certificatePinner = CertificatePinner.Builder()
+       									.add(
+               								"www.example.com",
+               								"sha256/XZSTYTDBJQVf1P2V7+fi23sWNR/X7CWNVW+CEEA="
+       									).build()
+
+						val okHttpClient = OkHttpClient.Builder()
+       					.certificatePinner(certificatePinner)
+       					.build()
+
+	Bonus: Dynamic Pinning
+		Pins are fetched securely from a trusted source (not hardcoded).
+			Ref: https://medium.com/@nvineet02/dynamic-ssl-pinning-in-android-with-okhttp-c1c5cedfe4d5
+		Useful for enterprises needing flexibility but adds complexity.
+
+
+	SSl pining purely in Android with Network Security Configuration(NSC):
+			This is very easy to implement in android but it is available from Android 7.0(NAUGAT, API 24 or above)
+
+			1)Create a network security config file under
+				res/xml/network_security_config.xml
+
+			2)Add the android:networkSecurityConfig attribute to the application tag.
+				<?xml version="1.0" encoding="utf-8"?>
+				<manifest
+   					xmlns:android="http://schemas.android.com/apk/res/android"
+   					package="co.rep.app">
+   					<application
+       					android:networkSecurityConfig="@xml/network_security_config">
+       					...
+   					</application>
+				</manifest>
+
+			3)Set up the configuration file and add fingerprints.
+				<?xml version="1.0" encoding="utf-8"?>
+				<network-security-config>
+ 		  			<domain-config>
+       					<domain includeSubdomains="true">example.com</domain>
+       					<pin-set>
+           					<pin digest="SHA-256">SF35DTYTDBJQVf1P2V7+fibTqbIsWNR/X7CWNVW+SDGS=</pin>
+           					<pin digest="SHA-256">GCVBDL5bejH7czkXcAeJ0vCiRxwMnVBsDlBMBsFtEBmdC=</pin>
+       					</pin-set>
+   		  			</domain-config>
+				</network-security-config>
+
+
+		🔐 Types of SSL Pinning Based on Certificate Chain Level
+			1. Leaf Certificate Pinning (End-Entity Certificate / Identity Certificate)
+
+					✅ Pros:
+								• Best security. By pinning against your leaf certificate you are guaranteeing with close to 100% certainty that this is your certificate 
+								  and thus the chain is valid.
+					❌ Cons:
+								• Short expiry time.
+								• Must have app updates frequently so you update the certificates.
+
+					• 🔸 Use when: You control the server’s certificate and don’t plan to rotate it often.
+							🔸 Use case:
+								• Mobile banking app connecting to a fixed backend
+								• Embedded devices or IoT connecting to a private endpoint
+									🔸 Risk: If the cert is renewed, the app will break unless updated.
+
+			2. Intermediate Certificate Pinning
+					✅ Pros:
+								• Any changes to the leaf certificates there is no need for app update.
+								• Longer expiry time.
+					❌ Cons:
+								• Lesser security then pinning the leaf.
+								• Any change on the intermediate cert you must have app update. CA can chance the intermediate chain when you issue new leaf cert.
+
+					• 🔸 Use when: You want more flexibility, and trust the intermediate CA used to issue your certs.
+							🔸 Use case:
+								• Enterprise mobile apps using a third-party CDN or load balancer
+								• Apps where certificates may be rotated (e.g., via Let’s Encrypt), but the CA stays the same
+									🔸 Balance: Safer than leaf, more specific than root
+
+			3. Root Certificate Pinning (Self-signed certificates)
+						There are ±100 CAs that are issuing certificates for clients. This means if we plan to pin against the root we’re allowing connections to all certificates issued by that CA. This number probably is very high.
+
+						✅ Pros:
+								• Longest expiry time. No need to track expiry time on the pinned certificate.
+								• Very easy change on the leaf/intermediate certificate chain.
+						❌ Cons:
+								• Least security. The app will trust any certificate issued by that CA, possibly to other people.
+
+						🔸 Use when: 
+							• You run a closed system (e.g., internal APIs, MDM, or IoT fleet)
+							• You manage the root CA (e.g., in government or military infrastructure)
+							• Internal tools in a zero-trust environment
+							• IoT networks with long-lived roots
+								🔸 Caution: Public root pinning in mobile apps is dangerous — if the root is compromised, you're exposed
+
+Refrences:
+	• https://dev.to/nayetwolf/how-does-https-works-35mh
+	• https://www.thesslstore.com/blog/how-does-https-work/
+	• https://developer.android.com/privacy-and-security/security-config
+	Practical Demo: https://www.youtube.com/watch?v=HWJ3cCNdKKA&ab_channel=iCode
