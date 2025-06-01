@@ -1,0 +1,61 @@
+📊 1. Arrangement (Main Axis)
+    • What it does: Controls how multiple children are distributed along the main axis of a layout
+                    container like Row or Column.
+    • Main Axis Direction:
+            • Row → Horizontal (left-to-right)
+            • Column → Vertical (top-to-bottom)
+    • Used with:
+            • Row: horizontalArrangement
+            • Column: verticalArrangement
+    • Important Constraint:
+            • Row ❌ cannot use verticalArrangement
+            • Column ❌ cannot use horizontalArrangement
+
+    • 📍 Types of Arrangements
+        Name	                    Description
+        Arrangement.Start / Top	    Children are aligned to the start (left/top).
+        Arrangement.End / Bottom	Children aligned to the end (right/bottom).
+        Arrangement.Center	        Children are centered within the parent.
+        Arrangement.SpaceBetween	First and last children stick to the edges, others spaced evenly.
+        Arrangement.SpaceAround	    Equal space around all children (half-size at start/end).
+        Arrangement.SpaceEvenly	    Equal space between all children including start and end.
+        Arrangement.spacedBy(dp)	Fixed spacing between children only.
+
+🧱 2. Alignment (Cross Axis)
+    • What it does: Controls how a child is positioned within its parent’s bounds, especially when:
+            • There is only one child
+            • You want to override default alignment behavior
+    • Cross Axis Direction:
+            • Row → Vertical (top-to-bottom)
+            • Column → Horizontal (left-to-right)
+    • Used with:
+            • Row: verticalAlignment
+            • Column: horizontalAlignment
+    • Important Constraint:
+            • Row ❌ cannot use horizontalAlignment
+            • Column ❌ cannot use verticalAlignment
+
+    • contentAlignment
+        ✅ Used in: Box
+                • Aligns the content inside the Box (children as a whole)
+                • Aligns both horizontally and vertically
+                • Affects all children unless overridden with Modifier.align()
+
+    • 🔄 Can be overridden per-child using Modifier.align()
+
+🧩 Quick Recap Table
+    Layout	    Main Axis	    Cross Axis	    Arrangement Used	            Alignment Used
+    Row	        Horizontal	    Vertical	    horizontalArrangement ✅	    verticalAlignment ✅
+    Column	    Vertical	    Horizontal	    verticalArrangement ✅	        horizontalAlignment ✅
+
+
+🔁 Rule of Thumb
+    • Use Arrangement to control main axis spacing.
+    • Use Alignment to control cross axis alignment.
+
+
+Rererences:
+    https://www.boltuix.com/2021/12/column-layout_25.html
+    https://www.boltuix.com/2021/12/row-layout_25.html
+    https://github.com/frostyshadows/android-cheatsheet?tab=readme-ov-file#centering-items-in-composables
+    https://www.youtube.com/watch?v=bo5TAnctPCA&ab_channel=AndroidKnowledge
