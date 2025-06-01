@@ -43,6 +43,59 @@
 
     • 🔄 Can be overridden per-child using Modifier.align()
 
+    • 📍 Types of Alignment
+        🔹 1. Alignment in Box → contentAlignment & Modifier.align()
+                These allow 2D alignment (horizontal + vertical). Available in:
+                    • Box(contentAlignment = ...)
+                    • Modifier.align(...) (used on individual children)
+                ✅ Common Values from Alignment:
+                    Alignment Option	        Description
+
+                    Alignment.TopStart	        Top-left corner
+                    Alignment.TopCenter	        Top-center
+                    Alignment.TopEnd	        Top-right corner
+                    Alignment.CenterStart	    Center-left
+                    Alignment.Center	        Center (middle)
+                    Alignment.CenterEnd	        Center-right
+                    Alignment.BottomStart	    Bottom-left
+                    Alignment.BottomCenter	    Bottom-center
+                    Alignment.BottomEnd	        Bottom-right
+
+        🔹 2. Alignment in Row → verticalAlignment
+                Used to align children vertically (cross axis of Row).
+
+                ✅ Values from Alignment.Vertical:
+                    Alignment Option	            Description
+
+                    Alignment.Top	                Align to the top
+                    Alignment.CenterVertically	    Align to vertical center
+                    Alignment.Bottom	            Align to the bottom
+
+        🔹 3. Alignment in Column → horizontalAlignment
+                Used to align children horizontally (cross axis of Column).
+
+                ✅ Values from Alignment.Horizontal:
+                    Alignment Option	            Description
+
+                    Alignment.Start	                Align to the start (LTR: left)
+                    Alignment.CenterHorizontally	Align to horizontal center
+                    Alignment.End	                Align to the end (LTR: right)
+
+       🔹 4. Text Alignment (Not layout alignment, but common confusion)
+                Used in Text composables:
+                Example:
+                    Text(
+                        text = "Hello",
+                        textAlign = TextAlign.Center
+                    )
+
+                ✅ Common TextAlign options:
+                        TextAlign.Start
+                        TextAlign.Center
+                        TextAlign.End
+                        TextAlign.Justify
+
+
 🧩 Quick Recap Table
     Layout	    Main Axis	    Cross Axis	    Arrangement Used	            Alignment Used
     Row	        Horizontal	    Vertical	    horizontalArrangement ✅	    verticalAlignment ✅
