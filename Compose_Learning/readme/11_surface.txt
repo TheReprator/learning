@@ -63,3 +63,7 @@
 
 ✅ Final Thought
 		Think of Surface as the Material Design equivalent of a Card, Sheet, or Container — not just a layout, but a visual and semantic wrapper with theming, color, shape, and elevation support.
+
+
+References:
+	https://github.com/SmartToolFactory/Jetpack-Compose-Tutorials/blob/master/Tutorial1-1Basics/src/main/java/com/smarttoolfactory/tutorial1_1basics/chapter1_basics/Tutorial1_2ClickSurfacesAndClicks.kt
