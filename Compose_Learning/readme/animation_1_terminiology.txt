@@ -1,0 +1,34 @@
+🧠 BASIC MEANING (Novice-Friendly)
+	Imagine you have a photo on your desk. Now imagine doing the following:
+
+		📏 1. Scale = Resize the photo
+			You're either zooming in or zooming out.
+
+				● scaleX = 2f → make it twice as wide
+				● scaleY = 0.5f → make it half as tall
+
+			Think: Stretch or shrink
+
+		🔁 2. Translate = Move the photo around
+			You slide the photo left, right, up, or down.
+
+				● translationX = 50f → move right by 50 pixels
+				● translationY = -30f → move up by 30 pixels
+
+			Think: Shift the position
+
+		🎥 3. Camera Distance = Depth into screen
+			You push the photo farther or closer to your eyes (for 3D effects like rotation).
+
+				● cameraDistance = 8f → controls the perspective effect in 3D when rotating.
+				● Lower values make the object feel more "zoomed in" when rotated in 3D.
+
+			Think: Depth / distance from viewer for 3D rotation effects
+
+
+
+🧩 Quick Recap
+	Transformation		What It Does									Example
+	scaleX/Y			Stretch/shrink horizontally or vertically		scaleX = 2f → 2x wide
+	translationX/Y		Move left/right or up/down						translationX = 100f → shift right
+	cameraDistance		Simulates 3D depth for rotation					cameraDistance = 8f → closer view

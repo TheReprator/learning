@@ -64,7 +64,7 @@
                     • The last modifier in the chain draws first
                     • The earlier (outer) modifiers draw on top
                     • components like background, border, clip, graphicsLayer, shadow, drawBehind, drawWithCache etc are
-                      part of layout phase
+                      part of drawing phase
 
 
             So drawing is applied last-to-first, or inner-to-outer
@@ -82,7 +82,7 @@
                     will print first.
              🧾 That means:
                     • components like clickable, toggleable, draggable, scrollable, nestedScroll, pointerInput, focusable
-                     etc are part of layout phase
+                     etc are part of Gesture/Input phase
 
            So gesture handlers are also applied last-to-first.
 
