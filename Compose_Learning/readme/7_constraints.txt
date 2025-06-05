@@ -115,8 +115,8 @@
                                 Example:
                                     Text(
                                             text = "Hello $name!",
-                                            modifier = modifier.size(300.dp).background(Color.Red).requiredSize(50.dp).background(Color.Green) //1
-                                            //        modifier = modifier.size(300.dp).background(Color.Red).padding(10.dp).requiredSize(50.dp).background(Color.Green) //2
+                                            modifier = modifier.size(300.dp).background(Color.Red).requiredSize(150.dp).background(Color.Green) //1
+                                            //        modifier = modifier.size(300.dp).background(Color.Red).padding(10.dp).requiredSize(150.dp).background(Color.Green) //2
                                         )
                                     Here, Green will be placed in center
                                     If we uncomment 2, comment 1, then Green will be placed in center of Red

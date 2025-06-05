@@ -159,3 +159,8 @@ Side effect: It refer to actions that affect the outside world or depend on exte
                     • State inconsistencies
                     • Runtime warnings/errors
                Using SideEffect avoids these issues by delaying the effect until the composition is done.
+
+
+Reference:
+    • https://vtsen.hashnode.dev/side-effects-summary-in-jetpack-compose
+    • https://medium.com/@ramadan123sayed/when-side-effects-execute-in-jetpack-compose-the-complete-frame-by-frame-timing-guide-a75207c31f28

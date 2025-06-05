@@ -62,7 +62,8 @@
 
 
 ✅ Final Thought
-		Think of Surface as the Material Design equivalent of a Card, Sheet, or Container — not just a layout, but a visual and semantic wrapper with theming, color, shape, and elevation support.
+		Think of Surface as the Material Design equivalent of a Card, Sheet, or Container — not just a layout,
+		but a visual and semantic wrapper with theming, color, shape, and elevation support.
 
 
 References:

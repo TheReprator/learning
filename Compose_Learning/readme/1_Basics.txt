@@ -3,7 +3,7 @@ Restart(Recompose): Means a fresh copy of composable(It was earlier there, but d
 
 Compose: First occurrence of composable in Tree
 
-Call side: The call site is the source code location in which a composable is called.
+Call site: The call site is the source code location in which a composable is called.
                                         The instance of a composable in Composition is identified by its call site. The
         Compose compiler considers each call site as distinct. Calling composables from multiple call sites will create
         multiple instances of the composable in Composition.
@@ -22,10 +22,10 @@ Tips to improve performance:
             }
 
     2) Skipping
-        a) A composable function is eligible for skipping unless:
-            • The function has a non-Unit return type
-            • The function is annotated with @NonRestartableComposable or @NonSkippableComposable
-            • A required parameter is of a non-stable type
+        a) A composable function is eligible for skipping, if it meets the following conditions:
+            • The function has a Unit return type
+            • The function is not annotated with @NonRestartableComposable or @NonSkippableComposable
+            • All parameter is of stable type
         b) Enable Strong skipping via build.gradle
         c) Stable Type, If a parameter is stable and unchanged, Compose skips recomposition for better performance.
             🧩 What is a Stable Type?

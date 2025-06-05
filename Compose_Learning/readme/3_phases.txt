@@ -40,7 +40,7 @@
            exactly. Some notable examples being LazyColumn, LazyRow and BoxWithConstraints.
 
 
-• 🎯State reads within a @Composable function or lambda block affect composition and potentially the subsequent phases.
+• 🎯State reads within a @Composable function or lambda block, affect composition and potentially the subsequent phases.
     When the state value changes, the recomposer schedules reruns of all the composable functions which read that state
     value. Note that the runtime may decide to skip some or all of the composable functions if the inputs haven't changed.
 

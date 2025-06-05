@@ -46,8 +46,8 @@
                     • The child measures inside the constraints passed down by outer modifiers
                     • components like size , padding , offset, fillMaxSize , sizeIn , wrapContentSize , requiredSize, align,
                       weight, fillMaxWidth, width, Arrangement.Center, onSizeChanged etc are part of layout phase
-                        • Animation Modifiers(animateContentSize, ) are also part of layout phase as properties like
-                            size, position, and opacity,  are changed during this operation to make UIs more dynamic.
+                    • Animation Modifiers(animateContentSize) are also part of layout phase as properties like
+                            size, position and opacity are changed during this operation to make UIs more dynamic.
 
              So layout is applied first-to-last, or outer-to-inner.
 

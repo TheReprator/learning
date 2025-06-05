@@ -32,3 +32,12 @@
 	scaleX/Y			Stretch/shrink horizontally or vertically		scaleX = 2f → 2x wide
 	translationX/Y		Move left/right or up/down						translationX = 100f → shift right
 	cameraDistance		Simulates 3D depth for rotation					cameraDistance = 8f → closer view
+
+
+🧠 What is a Blend Mode?
+	Blend modes define how two images combine when they are drawn on top of each other.
+
+	In this example, you're using:
+		blendMode = BlendMode.SrcOut
+		
+	SrcOut = Show the source only in areas where it does not overlap the destination.

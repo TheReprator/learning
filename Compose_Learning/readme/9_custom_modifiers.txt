@@ -180,7 +180,7 @@
 
                             @Composable
                             fun Modifier.rotateOnClick(): Modifier {
-                               // same as rotateOnClickUsingComposed...
+                               // same as rotateOnClick Using Composed...
                             }
 
                         🔸 1. Scenario:
