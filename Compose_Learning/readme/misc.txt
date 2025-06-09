@@ -1,3 +1,11 @@
 🧠 What is a MutableInteractionSource, BoxWithConstraints, SubComposelayout, slot, .graphicslayout,
  .drawBehind, Modifier.layout, onPlaced, drawWithContent?
-[
+
+https://www.youtube.com/watch?v=1yiuxWK74vI&ab_channel=AndroidDevelopers
+
+
+
+A very important feature of the Layout phase is the single pass measurement. This means that a layout element may not measure any of its children more than once. Single-pass measurement is good for performance, allowing Compose to efficiently handle deep UI trees.
+
+
+
