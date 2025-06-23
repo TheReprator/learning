@@ -73,7 +73,7 @@
 									Key Size					128/192/256 bits					256 bits
 									Speed						Hardware fast						Software fast
 									Platform Optimization		Optimized for Intel chips			Optimized for mobile (ARM CPUs)
-									Security					Very secure	Equally secure, 		newer
+									Security					Very secure							Equally secure
 									Timing-attack safe			Only in constant-time mode			Yes (default)
 									Use in Android				File, DB, message encryption		VPNs, TLS, fast messaging
 

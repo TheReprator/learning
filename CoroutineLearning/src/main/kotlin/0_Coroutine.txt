@@ -1,0 +1,51 @@
+✅ What is a Coroutine?
+
+    Kotlin Coroutines are a design pattern for simplifying code that allows you to write asynchronous and non-blocking
+    code in a sequential way. This makes your code easier to read, write, and maintain.
+
+    In simpler terms:
+        A coroutine is like a thread, but much cheaper and more cooperative.
+
+✅ Advantages of Coroutines
+    Lightweight
+        • Thousands of coroutines can run on a few threads.
+        • Unlike threads, they don’t require OS-level stack or scheduling.
+    Structured Concurrency
+        • Helps manage the lifecycle of async tasks — a parent coroutine cancels its children automatically.
+    Readable Asynchronous Code
+        • Looks like synchronous code (no nested callbacks or messy chains).
+    Better Resource Efficiency
+        • Uses suspending functions, not blocking calls.
+    Built-in Cancellation
+        • Easy and safe cancellation of ongoing tasks (e.g., API calls, animations).
+
+❌ Disadvantages of Coroutines
+    Learning Curve
+        • Understanding scopes, dispatchers, structured concurrency, exception handling takes effort.
+    Debugging is Harder
+        • Stack traces and step-through debugging can be less intuitive compared to threads.
+    Improper Usage Can Lead to Bugs
+        • Launching coroutines in the wrong scope or dispatcher can cause memory leaks or UI issues.
+    Not Always Faster
+        • For CPU-intensive tasks, coroutines offer no performance gain over threads.
+
+
+🧠 Threads vs Processes vs Coroutines (Detailed)
+    Feature	            Process	                                Thread	                                Coroutine
+    Definition	        Independent execution unit with its     Sub-unit of process sharing memory      Lightweight task within a thread
+                        own memory space
+
+    Memory	            Each process has its own memory	        Shares memory with sibling threads	    Shares memory with parent thread
+
+    Context Switch	    Heavy — managed by OS	                Medium — managed by OS	                Light — managed by Kotlin runtime
+
+    Crash Impact	    One process crash doesn’t affect        Crash may affect the whole process      Crash in one coroutine can be isolated
+                        others		                                                                    via SupervisorJob
+
+    Concurrency	        True parallelism	                    True parallelism	                    Pseudo-concurrent (based on suspend/resume)
+
+    Use Case	        Browser tabs, sandboxed systems	        Multi-core processing	                Async I/O, background work in UI apps
+
+    Startup Cost	    High	                                Medium	                                Low
+
+    Communication	    Inter-process communication (IPC)	    Shared memory or sync primitives	    Shared memory within coroutine scope

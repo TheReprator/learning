@@ -183,8 +183,8 @@ private fun flow_intermediate_7_zip() = runBlocking {
 
 /*
 Zip: Combines two flows pair-wise. It makes pairs from both flows. It also need to specify a function that decides
-    how elements are paired(lin 176). Each element can only be part of one pair, so it needs to wait for its pair.
-    Elements left without a pair are lost, that's why element D, E from flow letters(line 173) will not appear in result
+    how elements are paired(lin 178). Each element can only be part of one pair, so it needs to wait for its pair.
+    Elements left without a pair are lost, that's why element D, E from flow letters(line 175) will not appear in result
     as there is no corresponding elements in the numbers flow(line 172)
 Output:
     1A
