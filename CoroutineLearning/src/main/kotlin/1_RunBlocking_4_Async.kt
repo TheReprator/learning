@@ -9,36 +9,36 @@ fun main(): Unit = runBlocking {
 
 private suspend fun type() = runBlocking {
     val asyncNotLazy = GlobalScope.async {
-        println("inside async not lazy")
+        println("1 inside async not lazy")
         422343
     }
 
 
     val asyncLazy = GlobalScope.async(start = CoroutineStart.LAZY) {
-        println("inside async lazy")
+        println("2 inside async lazy")
         42
     }
 
-    println("Async lazy")
+    println("3 Async lazy")
 
 
     val asyncLazyImmediate = GlobalScope.async(start = CoroutineStart.LAZY) {
-        println("inside async lazy immediate")
+        println("4 inside async lazy immediate")
         42
     }
 
-    println("Async lazy immediate")
+    println("5 Async lazy immediate")
     val asyncLazyImmediateResult = asyncLazyImmediate.await()
     println(asyncLazyImmediateResult)
     println()
     println()
 
     val asyncJob = GlobalScope.async {
-        println("inside async")
+        println("6 inside async")
         42
     }
 
-    println("Async without delay")
+    println("7 Async without delay")
     val asyncJobResult = asyncJob.await()
     println(asyncJobResult)
     println()
@@ -46,13 +46,13 @@ private suspend fun type() = runBlocking {
 
 
     val asyncJob1 = GlobalScope.async {
-        println("inside async delay")
+        println("8 inside async delay")
         delay(1000L)
-        println("inside async delay after delay")
+        println("9 inside async delay after delay")
         40
     }
 
-    println("Async with delay")
+    println("10 Async with delay")
     val asyncJobResult1 = asyncJob1.await()
     println(asyncJobResult1)
 }

@@ -6,28 +6,28 @@ private fun superVisorScopeWithContextType1(): Unit = runBlocking {
     withContext(SupervisorJob()) {
         launch {
             delay(700)
-            println("superVisorScopeWithContextType1: SupervisorScope child")
+            println("superVisorScopeWithContextType1: SupervisorScope child 1")
         }
 
         launch {
             delay(1000)
-            throw Exception("superVisorScopeWithContextType1: SupervisorScope child Exception")
+            throw Exception("superVisorScopeWithContextType1: SupervisorScope child Exception 2")
         }
 
         launch {
             delay(1200)
-            println("superVisorScopeWithContextType1: SupervisorScope coroutine builder")
+            println("superVisorScopeWithContextType1: SupervisorScope coroutine builder 3")
         }
     }
 
     launch {
         delay(1500)
-        println("superVisorScopeWithContextType1: parent main builder")
+        println("superVisorScopeWithContextType1: parent main builder 4")
     }
 
     launch {
         delay(500)
-        println("superVisorScopeWithContextType1: coroutine builder")
+        println("superVisorScopeWithContextType1: coroutine builder 5")
     }
 }
 
@@ -52,29 +52,29 @@ private suspend fun superVisorScopeWithContextType2() = coroutineScope {
         supervisorScope {
             launch {
                 delay(700)
-                println("superVisorScopeWithContextType2: SupervisorScope child")
+                println("superVisorScopeWithContextType2: SupervisorScope child 1")
             }
 
             launch {
                 delay(1000)
-                throw Exception("superVisorScopeWithContextType2: SupervisorScope child Exception")
+                throw Exception("superVisorScopeWithContextType2: SupervisorScope child Exception 2")
             }
 
             launch {
                 delay(1200)
-                println("superVisorScopeWithContextType2: SupervisorScope coroutine builder")
+                println("superVisorScopeWithContextType2: SupervisorScope coroutine builder 3")
             }
         }
     }
 
     launch {
         delay(1500)
-        println("superVisorScopeWithContextType2: parent main builder")
+        println("superVisorScopeWithContextType2: parent main builder 4")
     }
 
     launch {
         delay(500)
-        println("superVisorScopeWithContextType2: coroutine builder")
+        println("superVisorScopeWithContextType2: coroutine builder 5")
     }
 }
 /*

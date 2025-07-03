@@ -19,6 +19,19 @@ private suspend fun type1(): Unit = coroutineScope {
             println("SupervisorScope coroutine builder")
         }
     }
+
+    launch {
+        delay(800)
+        println("SupervisorScope other child 0")
+    }
+
+    launch {
+        delay(1400)
+        println("SupervisorScope other child 1")
+    }
+    launch {
+        println("SupervisorScope other child 2")
+    }
 }
 
 /*
@@ -34,35 +47,35 @@ fun main(): Unit = runBlocking {
     println()
     println()
     println()
-    type2()
+    //type2()
 }
 
 private suspend fun type2(): Unit = coroutineScope {
     supervisorScope {
         launch {
             delay(700)
-            println("SupervisorScope type2:  inner child")
+            println("SupervisorScope type2:  inner child 1")
             launch {
                 delay(1000)
-                throw Exception("SupervisorScope type2: child Exception")
+                throw Exception("SupervisorScope type2: child Exception 2")
                 launch {
-                    println("SupervisorScope type2: inner inner child will not be executed")
+                    println("SupervisorScope type2: inner inner child will not be executed 3")
                 }
             }
 
             launch {
                 delay(1200)
-                println("SupervisorScope type2: inner child 2")
+                println("SupervisorScope type2: inner child 4")
             }
         }
         launch {
             delay(1500)
-            println("SupervisorScope type2: other child")
+            println("SupervisorScope type2: other child 5")
         }
 
         launch {
             delay(2000)
-            println("SupervisorScope type2: coroutine builder")
+            println("SupervisorScope type2: coroutine builder 6")
         }
     }
 }

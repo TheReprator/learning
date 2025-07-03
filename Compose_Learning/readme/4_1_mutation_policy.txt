@@ -1,0 +1,119 @@
+fun <T : Any?> mutableStateOf(
+      value: T,
+      policy: SnapshotMutationPolicy<T> = structuralEqualityPolicy()
+  ): MutableState<T>
+
+  🧠 SnapshotMutationPolicy is a policy to control how the result of mutableStateOf report and merge changes to the
+     state object.
+
+    In short, with this policy, we can tell compose when to consider a state as changed which then results in
+    the recomposition. This policy can be passed as a parameter to mutableStateOf and compositionLocalOf.
+
+  📦Pre-defined policies in Standard Compose library
+
+        1. structuralEqualityPolicy:
+                This policy treats values of a State as equivalent if they are structurally (==) equal.
+              Example:
+                    val person by remember {
+                      mutableStateOf<Person?>(null, structuralEqualityPolicy())
+                    }
+
+                    val firstPerson = Person("Bob")
+                    val secondPerson = Person("Bob")
+                    val thirdPerson = Person("Jake")
+
+                    // structurally equal, i will not recompose!
+                    firstPerson == secondPerson
+
+                    // structurally different, recompose!
+                    secondPerson == thirdPerson
+
+        2. referentialEqualityPolicy:
+                This policy treats the values of a State as equivalent, if they are referentially (===) equal. It considers
+              a change if the memory reference of the old object is different from the memory reference of the new one
+
+            Example:
+                val person by remember {
+                  mutableStateOf<Person?>(null, referentialEqualityPolicy())
+                }
+
+                val firstPerson = Person("Bob")
+                val stillFirstPerson = firstPerson
+                val secondPerson = Person("Jake")
+
+                // same references, i will not recompose!
+                firstPerson == stillFirstPerson
+
+                // hey, different references, recompose!
+                firstPerson == secondPerson
+
+        3. neverEqualPolicy:
+                This policy never treats the values of a State as equivalent. If this policy is used, then every time
+              MutableState.value is updated, it's considered as a change.
+                           It considers the old object different from the new object.
+
+            Example:
+                val person by remember {
+                  mutableStateOf<Person?>(null, neverEqualPolicy())
+                }
+
+                // structurally equal, but i don't care... recompose!
+                val firstPerson = Person("Bob")
+                val secondPerson = Person("Bob")
+
+        🧠4. Custom policy:
+
+                   data class MyState(val state: String, val fieldToSkip: String)
+
+               ⚙️ Without Custom policy:
+                      Example:
+                            @Composable
+                            fun MyDemo() {
+                                var myState by remember {
+                                    mutableStateOf(
+                                        value = MyState(
+                                            state = "Initial value",
+                                            fieldToSkip = "Some value"
+                                        )
+                                    )
+                                }
+                                println("MyState = $myState")
+
+                                LaunchedEffect(Unit) {
+                                    myState = myState.copy(state = "New Value")
+                                    delay(100)
+                                    myState = myState.copy(fieldToSkip = "Value 2")
+                                }
+                            }
+
+                      Output:
+                             MyState = MyState(state=Initial value, fieldToSkip=Some value)
+                             MyState = MyState(state=New Value, fieldToSkip=Some value)
+                             MyState = MyState(state=New Value, fieldToSkip=Value 2)
+
+               ⚙️Scenario:
+                            If we want to avoid recomposition whenever fieldToSkip is changed then we'll have to define
+                            our own policy for this use case. So let's create it.
+
+               ⚙️With Custom Policy:
+
+                    object MyStatePolicy : SnapshotMutationPolicy<MyState> {
+                        override fun equivalent(a: MyState, b: MyState): Boolean {
+                            return a.state == b.state
+                        }
+                    }
+
+                    Example:
+                         var myState by remember {
+                             mutableStateOf(
+                                 value = MyState(
+                                     state = "Initial value",
+                                     fieldToSkip = "Some value"
+                                 ),
+                                policy = MyStatePolicy
+                             )
+                         }
+
+                    Output:
+                            MyState = MyState(state=Initial value, fieldToSkip=Some value)
+                            MyState = MyState(state=New Value, fieldToSkip=Some value)
