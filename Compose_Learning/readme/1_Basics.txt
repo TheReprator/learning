@@ -75,8 +75,13 @@ Tips to improve performance:
                     • Use @Immutable for data classes with only stable types.
                     • Use @Stable if you’re using mutable state inside a class.
 
-                ✅ @Immutable → for read-only data (safe, deeply checked)
-                ✅ @Stable → for mutable objects that use mutableStateOf internally and inform Compose of changes
+                ✅ @Immutable is an annotation to tell Compose compiler that this object is immutable for optimization, so
+                    without using it, there will be unnecessary re-composition that might get triggered.
+                ✅ @Stable is an annotation to tell the Compose compiler that this object might change, but when it changes,
+                    Compose runtime will be notified.
+
+                        Both are contract for telling Compose compiler to use structural equality(==) when checking inputs of a
+                  function to compare with previous values when recomposition happens in scope this function is in.
 
         d) When all types passed as parameters to a composable are stable, the parameter values are compared for equality
            based on the composable position in the UI tree. Recomposition is skipped if all the values are unchanged since
