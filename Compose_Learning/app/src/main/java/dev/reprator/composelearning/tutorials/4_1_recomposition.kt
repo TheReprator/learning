@@ -78,6 +78,16 @@ private fun RecompositionUnstable(modifier: Modifier = Modifier) {
             Text("Button 5: Update Stable with values: ${userStable.age}, ${userStable.isSelected}")
         }
 
+        RandomColorColumn {
+            var innerUserStable by remember { mutableStateOf(UserStable(125, true)) }
+            Button(onClick = {
+                innerUserStable = userStable.copy(innerUserStable.age + 1)
+            }) {
+                println("1.8 RecompositionUnstable innerUserStable lambda")
+                Text("Button 6: Update innerUserStable with values: ${innerUserStable.age}, ${innerUserStable.isSelected}")
+            }
+        }
+
         Spacer(Modifier.height(20.dp))
 
         RandomColorColumn {
@@ -96,14 +106,17 @@ private fun RecompositionUnstable(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun RecompositionSample(modifier: Modifier = Modifier) {
-    println("🔥 RecompositionSample Root")
-
-    Column(modifier = modifier.padding(16.dp)) {
-        println("🔥 RecompositionSample Root Container")
-        RecompositionUnstable()
-    }
+private fun UserItemUnStable1(user: UserUnStable) {
+    println("🔥 Composing UnStable: ${user.age}, ${user.isSelected}")
+    Text("UnStable User: ${user.age}, ${user.isSelected}")
 }
+
+@Composable
+private fun UserItemStable1(user: UserStable) {
+    println("✅ Composing Stable: ${user.age}, ${user.isSelected}")
+    Text("Stable User: ${user.age}, ${user.isSelected}")
+}
+
 
 /*
 Points to be cleared:
@@ -161,24 +174,33 @@ Output:
 
     Explanation:
         a) Here, onclick of Button 5, only stable types are update, and hence all the composable subscribed to userStable, will be recomposed.
-        b) But since the "userUnStable" is of unstable type due to "var nature of isSelected", hence, whoever composable is subscribed
-            to it via parameter like(UserItemUnStable1(line 172) from line 85,93),  will also be recomposed
-                Remember the Button 1...4, will not recompose, as they are withing the same composable
+        b) But since the "userUnStable" is of unstable type(Due to var nature of isSelected) of mutable state and is in same scope,
+           as that of "userStable",
+        c) So whenever "userStable" or any stable is updated, compose make sure all called parameter
+          function((UserItemUnStable1(line 109) from line 95,96,103)) which are subscribed to unstable mutableState(UserUnStable)
+          in same direct scope, gets called or recomposed.
+                    Or in simple, you can say, whenever any mutableState object of stable type is updated, all the childs
+           composable, who are using non-stable types as parameter will get recomposed
+                Remember the Button 1...4, will not recompose, as they are within the same composable
+
+        6) Onclick of "Button 6: Update innerUserStable with values", line 84,
+                1.8 RecompositionUnstable innerUserStable lambda
+
+    Explanation:
+        a) Here, innerUserStable is inner and is read only in same RandomColorColumn scope not outside of it, so unstable type
+            is not recomposed
 * */
 
 
 @Composable
-private fun UserItemUnStable1(user: UserUnStable) {
-    println("🔥 Composing UnStable: ${user.age}, ${user.isSelected}")
-    Text("UnStable User: ${user.age}, ${user.isSelected}")
-}
+fun RecompositionSample(modifier: Modifier = Modifier) {
+    println("🔥 RecompositionSample Root")
 
-@Composable
-private fun UserItemStable1(user: UserStable) {
-    println("✅ Composing Stable: ${user.age}, ${user.isSelected}")
-    Text("Stable User: ${user.age}, ${user.isSelected}")
+    Column(modifier = modifier.padding(16.dp)) {
+        println("🔥 RecompositionSample Root Container")
+        RecompositionUnstable()
+    }
 }
-
 /*
 Disable Strong skipping mode, to see the effect:
     composeCompiler {
