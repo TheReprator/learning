@@ -16,3 +16,8 @@ When to Use Which:
 Use onGloballyPositioned when you need to know the global position in the window or screen coordinates, perhaps for creating overlays or implementing drag-and-drop features across different parts of the UI.
 Use onPlaced when you're only interested in your Composable's position relative to its parent, and you want to avoid the overhead of monitoring the entire UI tree.
 
+
+
+Generate strong skip mode report:
+./gradlew assembleRelease -PcomposeCompilerReports=true
+

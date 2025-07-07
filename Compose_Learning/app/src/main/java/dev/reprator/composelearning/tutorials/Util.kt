@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import kotlin.random.Random
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Text
 
 fun getRandomColor() =  Color(
     red = Random.nextInt(256),
@@ -41,6 +42,21 @@ fun RandomColorColumn(content: @Composable () -> Unit) {
 }
 
 @Composable
+fun RandomColorTextNonInlineScope(content: @Composable () -> Unit) {
+
+    println("📌 RandomColumn() COMPOSABLE: $content")
+    Column(
+        modifier = Modifier
+            .padding(4.dp)
+            .shadow(1.dp, shape = CutCornerShape(topEnd = 8.dp))
+    ) {
+        println("📌📌 RandomColumn() SCOPE")
+        content()
+        println("📌📌 RandomColumn() SCOPE AFTER")
+    }
+}
+
+@Composable
 fun RandomColorButton(onClick: () -> Unit, content: @Composable () -> Unit) {
 
     println("💬 RandomColorButton COMPOSABLE: $content")
@@ -53,5 +69,21 @@ fun RandomColorButton(onClick: () -> Unit, content: @Composable () -> Unit) {
     ) {
         println("💬💬 RandomColorButton() SCOPE")
         content()
+    }
+}
+
+@Composable
+fun RandomColorButton2(onClick: () -> Unit, text: String) {
+
+    println("RecompositionLambdaSampleList LambdaUnStableSample 3 $text")
+
+    Button(
+        modifier = Modifier.fillMaxWidth(),
+        colors = ButtonDefaults.buttonColors(containerColor = getRandomColor()),
+        onClick = onClick,
+        shape = RoundedCornerShape(5.dp)
+    ) {
+        println("RecompositionLambdaSampleList LambdaUnStableSample 4 $text")
+        Text(text)
     }
 }

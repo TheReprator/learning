@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import dev.reprator.composelearning.tutorials.RecomposableSampleList
+import dev.reprator.composelearning.tutorials.RecompositionLambdaSampleList
 import dev.reprator.composelearning.tutorials.RecompositionSample
 import dev.reprator.composelearning.ui.theme.ComposeLearningTheme
 
@@ -26,7 +27,7 @@ class MainActivity : ComponentActivity() {
                         name = "Android",
                         modifier = Modifier.padding(innerPadding)
                     )*/
-                    RecompositionSample(Modifier.padding(innerPadding))
+                    RecompositionLambdaSampleList(Modifier.padding(innerPadding))
                 }
             }
         }
