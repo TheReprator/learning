@@ -236,6 +236,4 @@ Terminology:
                      Lambdas wrapped in remember retain the same reference across recompositions
                      Example: stableLambda(line 29) is an example of stable lambda
 
-Lambdas wrapped in remember retain the same reference across recompositions
-
 * */

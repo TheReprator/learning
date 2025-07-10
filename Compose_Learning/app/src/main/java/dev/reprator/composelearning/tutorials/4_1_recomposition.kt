@@ -190,10 +190,10 @@ Output:
     Explanation:
         a) Here, onclick of Button 5, only stable types are update, and hence all the composable subscribed to userStable, will be recomposed.
         b) But since the "userUnStable" is of unstable type(Due to var nature of isSelected) of mutable state and is in same scope,
-           as that of "userStable",
-        c) If there is any composable function((UserItemUnStable1(line 109) from line 95,96,103)), which are dependent/subscribed
-            to Unstable type, and that is in same scope where stable type is being read(line 110), then compose
-            make sure that called/defined function also gets recomposed(UserItemUnStable1(line 109)), even when there is
+           as that of "userStable" - ignore it, point c is valid
+        c) If there is any composable function((UserItemUnStable1(line 110)), which are dependent/subscribed
+            to Unstable type, and that is in same scope where stable type is being read(line 111), then compose
+            make sure that called/defined function also gets recomposed(UserItemUnStable1(line 110)), even when there is
             no change in unstable type.
                 Remember the Button 1...4, will not recompose, as they in different scope
 
@@ -419,7 +419,7 @@ Output:
             1) Here you are only updating only the count,  Ideally you should only see this:
                     ValueComposable()
 
-            2) But the compose is recomposing the whole body/lambda of Column(line 334-364) because of following reason,
+            2) But the compose is recomposing the whole body/lambda of Column(line 368-372) because of following reason,
                   a)  ⚠️ The Gotcha: List<Int> is Not @Stable
                       Even though your StableUiState is marked @Stable, its field:
                             var list: List<Int> = listOf(1, 2, 3)
@@ -510,4 +510,50 @@ Unstable parameters:
                   }
 
                 • data class MutableUser(var name: String, var age: Int) // ❌ Not stable because var fields can change silently
+
+🔍 @Stable vs @Immutable in Jetpack Compose
+    🧱 Definition
+        Marker	        Meaning
+        @Stable	        Object might change, but it signals Compose which properties to track.
+        @Immutable	    Object won’t change after creation (like Kotlin data class + vals).
+
+    🧠 Key Differences
+        Feature	                            @Stable	                                    @Immutable
+        Can have mutable properties	        ✅ Yes (usually with mutableStateOf)	    ❌ No (all vals, deeply immutable)
+        Compose optimization support	    ✅ Yes	                                    ✅ Full
+        Used for recomposition skip	        ✅ Partial	                                ✅ Full
+        Default for data class	            ❌ No	                                    ✅ If all vals & immutables
+        When to use	                        Custom mutable models	                    Value objects / DTOs
+
+    🧠 Analogy: Building Blocks vs Sculptures
+        • 🔨 @Stable is like a Lego block — you can change pieces (like count++), but Compose knows
+                which pieces to track.
+        • 🗿 @Immutable is like a sculpture made of stone — once made, it never changes. Compose skips
+                recomposition altogether if nothing else changes.
+
+    💡 Usage Scenarios
+        ✅ Use @Immutable when:
+            • You use a data class with all val properties.
+            • The object is passed around but never mutated.
+                    @Immutable
+                    data class User(val id: Int, val name: String)
+
+        ✅ Use @Stable when:
+            • Your object has internal state using mutableStateOf.
+            • You want to track fine-grained changes inside an object.
+                    @Stable
+                    class UiState {
+                        var count by mutableStateOf(0)
+                    }
+
+    🔍 How Compose Treats Them
+        Object Type	            Does Compose Recompose Child on Update?
+        Plain class	            ✅ Always recomposes
+        @Stable class	        🔄 Recompose only if tracked properties change
+        @Immutable class	    ❌ Never recomposes unless reference changes
+
+    📌 Tips
+        • @Immutable is safer and more performant if immutability fits your data model.
+        • Use @Stable when you need mutable internal state.
+        • Compose auto-detects immutability for data class with only val members — no need to annotate.
 * */
