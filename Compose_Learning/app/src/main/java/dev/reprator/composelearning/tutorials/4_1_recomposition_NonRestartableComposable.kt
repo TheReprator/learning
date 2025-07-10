@@ -2,7 +2,6 @@ package dev.reprator.composelearning.tutorials
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -20,12 +19,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import kotlin.math.absoluteValue
 
 @OptIn(ExperimentalComposeApi::class)
 @NonRestartableComposable
 @Composable
-fun RecompositionNonRestartableAnnotationSample_static() {
+private fun RecompositionNonRestartableAnnotationSample_static() {
     RandomColorColumn {
         println("RecompositionSample NonRestartableComposableSample recomposing: 3: RecompositionNonRestartableAnnotationSample_static")
         Text("3: RecompositionNonRestartableAnnotationSample_static")
@@ -35,7 +33,7 @@ fun RecompositionNonRestartableAnnotationSample_static() {
 @OptIn(ExperimentalComposeApi::class)
 @Composable
 @NonRestartableComposable
-fun RecompositionNonRestartableAnnotationSample_parameter(int: Int) {
+private fun RecompositionNonRestartableAnnotationSample_parameter(int: Int) {
     RandomColorColumn {
         println("RecompositionSample NonRestartableComposableSample recomposing: 4: RecompositionNonRestartableAnnotationSample_parameter")
         Text("4: RecompositionNonRestartableAnnotationSample_parameter")
@@ -45,7 +43,7 @@ fun RecompositionNonRestartableAnnotationSample_parameter(int: Int) {
 @OptIn(ExperimentalComposeApi::class)
 @Composable
 @NonRestartableComposable
-fun RecompositionNonRestartableAnnotationSample_parameter_log(int: Int) {
+private fun RecompositionNonRestartableAnnotationSample_parameter_log(int: Int) {
     RandomColorColumn {
         println("RecompositionSample NonRestartableComposableSample recomposing: 4.1: RecompositionNonRestartableAnnotationSample_parameter $int")
         Text("4: RecompositionNonRestartableAnnotationSample_parameter")
@@ -55,7 +53,7 @@ fun RecompositionNonRestartableAnnotationSample_parameter_log(int: Int) {
 @OptIn(ExperimentalComposeApi::class)
 @NonRestartableComposable
 @Composable
-fun RecompositionNonRestartableAnnotationSample_parameter_read(int: Int) {
+private fun RecompositionNonRestartableAnnotationSample_parameter_read(int: Int) {
     RandomColorColumn {
         println("RecompositionSample NonRestartableComposableSample recomposing: 5: RecompositionNonRestartableAnnotationSample_parameter_read")
         Text("5 RecompositionNonRestartableAnnotationSample_parameter_read $int")
@@ -66,7 +64,7 @@ fun RecompositionNonRestartableAnnotationSample_parameter_read(int: Int) {
 @OptIn(ExperimentalComposeApi::class)
 @Composable
 @NonRestartableComposable
-fun RecompositionNonRestartableAnnotationSample_parameter_button(int: Int) {
+private fun RecompositionNonRestartableAnnotationSample_parameter_button(int: Int) {
     println("RecompositionSample NonRestartableComposableSample recomposing: 6: RecompositionNonRestartableAnnotationSample_parameter_button")
     var counter by remember { mutableStateOf(0) }
     Button(onClick = {counter++}) {
@@ -104,7 +102,7 @@ fun RecompositionNonRestartableAnnotationSample_parameter_button(int: Int) {
 }
 
 @Composable
-fun RecompositionNonRestartableAnnotationSample() {
+private fun RecompositionNonRestartableAnnotationSample() {
     var counter by remember { mutableStateOf(0) }
 
     println("RecompositionSample NonRestartableComposableSample recomposing: 1: inside root")
@@ -148,20 +146,20 @@ Output Logs:
 @OptIn(ExperimentalComposeApi::class)
 @NonRestartableComposable
 @Composable
-fun RecompositionWithNonRestartableComposableSample() {
+private fun RecompositionWithNonRestartableComposableSample() {
     println("🔥 RecompositionLambdaSampleList: Recomposition_Normal_vs_NonRestartableComposableSample: 3: RecompositionWithNonRestartableComposableSample")
     Text("RecompositionWithNonRestartableComposableSample")
 }
 
 
 @Composable
-fun RecompositionWithoutNonRestartableComposableSample() {
+private fun RecompositionWithoutNonRestartableComposableSample() {
     println("🔥 RecompositionLambdaSampleList: Recomposition_Normal_vs_NonRestartableComposableSample: 4: RecompositionWithoutNonRestartableComposableSample")
     Text("RecompositionWithoutNonRestartableComposableSample")
 }
 
 @Composable
-fun Recomposition_Normal_vs_NonRestartableComposableSample() {
+private fun Recomposition_Normal_vs_NonRestartableComposableSample() {
 
     println("🔥 RecompositionLambdaSampleList: Recomposition_Normal_vs_NonRestartableComposableSample: 1: Root")
 
@@ -220,15 +218,16 @@ Explanation:
                         even check anymore.
 
                2.d)
-                🧪 Conclusion
-                    • You don’t need it for correctness if your composable isn’t reading state.
-                    • But it’s **valuable for:
-                        • Performance tuning** in deeply nested or large recomposing trees.
-                        • Making sure some content never recomposes, even by accident.
-                        • Giving compile-time guarantees to Compose internals.
+                 ✅ Final Summary:
+                    • “Avoid generating restart and skip logic” means:
+                            • No recomposition checkpoints for this function.
+                            • No parameter change tracking — no isChanged(...).
+                            • Always fully re-invoked if the parent re-runs.
+                            • Useful for tiny utility composables with no reactive dependencies.
 
-    @NonRestartableComposableApplying to a Composable function tells the runtime to update its parameters
-        without restarting the function, allowing it to maintain internal state and ongoing side effects.
+                    • @NonRestartableComposableApplying to a Composable function tells the runtime to update
+                      its parameters without restarting the function, allowing it to maintain internal state
+                      and ongoing side effects.
 
  Reference:
     https://www.youtube.com/watch?v=h1xTtTl0k7Q&ab_channel=KotlinbyJetBrains
