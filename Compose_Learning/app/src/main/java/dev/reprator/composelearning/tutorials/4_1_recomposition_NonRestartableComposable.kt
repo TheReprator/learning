@@ -226,6 +226,13 @@ Explanation:
                         • Performance tuning** in deeply nested or large recomposing trees.
                         • Making sure some content never recomposes, even by accident.
                         • Giving compile-time guarantees to Compose internals.
+
+    @NonRestartableComposableApplying to a Composable function tells the runtime to update its parameters
+        without restarting the function, allowing it to maintain internal state and ongoing side effects.
+
+ Reference:
+    https://www.youtube.com/watch?v=h1xTtTl0k7Q&ab_channel=KotlinbyJetBrains
+    https://velog.io/@skydoves/compose-stability
 * */
 
 @Composable
