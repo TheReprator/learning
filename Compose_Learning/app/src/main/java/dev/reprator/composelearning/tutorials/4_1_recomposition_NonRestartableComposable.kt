@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ExperimentalComposeApi
 import androidx.compose.runtime.NonRestartableComposable
+import androidx.compose.runtime.NonSkippableComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -147,19 +148,27 @@ Output Logs:
 @NonRestartableComposable
 @Composable
 private fun RecompositionWithNonRestartableComposableSample() {
-    println("🔥 RecompositionLambdaSampleList: Recomposition_Normal_vs_NonRestartableComposableSample: 3: RecompositionWithNonRestartableComposableSample")
+    println("🔥 RecompositionLambdaSampleList: Recomposition_Normal_vs_NonRestartableComposableSample_vs_NonSkippableComposable: 3: RecompositionWithNonRestartableComposableSample")
     Text("RecompositionWithNonRestartableComposableSample")
+}
+
+@OptIn(ExperimentalComposeApi::class)
+@NonSkippableComposable
+@Composable
+private fun RecompositionWithNonSkippableComposableSample() {
+    println("🔥 RecompositionLambdaSampleList: Recomposition_Normal_vs_NonRestartableComposableSample_vs_NonSkippableComposable: 4: RecompositionWithNonSkippableComposableSample")
+    Text("RecompositionWithNonSkippableComposableSample")
 }
 
 
 @Composable
 private fun RecompositionWithoutNonRestartableComposableSample() {
-    println("🔥 RecompositionLambdaSampleList: Recomposition_Normal_vs_NonRestartableComposableSample: 4: RecompositionWithoutNonRestartableComposableSample")
+    println("🔥 RecompositionLambdaSampleList: Recomposition_Normal_vs_NonRestartableComposableSample_vs_NonSkippableComposable: 5: RecompositionWithoutNonRestartableComposableSample")
     Text("RecompositionWithoutNonRestartableComposableSample")
 }
 
 @Composable
-private fun Recomposition_Normal_vs_NonRestartableComposableSample() {
+private fun Recomposition_Normal_vs_NonRestartableComposableSample_vs_NonSkippableComposable() {
 
     println("🔥 RecompositionLambdaSampleList: Recomposition_Normal_vs_NonRestartableComposableSample: 1: Root")
 
@@ -173,6 +182,7 @@ private fun Recomposition_Normal_vs_NonRestartableComposableSample() {
         }
 
         RecompositionWithNonRestartableComposableSample()
+        RecompositionWithNonSkippableComposableSample()
         RecompositionWithoutNonRestartableComposableSample()
     }
 }
@@ -183,15 +193,15 @@ Output :
             Nothing happens:
 
 Explanation:
-    1) This proves that even without NonRestartableComposable annotation, composable will behave
+    1) This proves that even without NonRestartableComposable or NonSkippableComposable annotation, composable will behave
        same as normal composable, if state is not being read normally.
                 As RecompositionWithNonRestartableComposableSample & RecompositionWithoutNonRestartableComposableSample
-       both are not reading anything parent. So, compose compiler behave normally
+       RecompositionWithNonSkippableComposableSample, three are not reading anything parent. So, compose compiler behave normally
 
     2) 🤔 Why Use @NonRestartableComposable if Compose Already Skips Recomposing?,
             2.a) So we might be asking:
                 “If a composable doesn't read any state, Compose skips recomposition anyway.
-                So what's the point of marking @NonRestartableComposable?”
+                So what's the point of marking @NonRestartableComposable or @NonRestartableComposable?”
 
             2.b)
                 ✅ Here's the Core Idea:
@@ -207,30 +217,34 @@ Explanation:
                     • The Compose compiler then optimizes it harder:
                         • It omits tracking dirty flags.
                         • It removes observation setup altogether.
-                        • It's guaranteed non-restartable, even if Compose internals change later.
                         • Can help eliminate unnecessary lambdas or internal remember checks.
+                     • No recomposition checkpoints for this function.
+                         • No parameter change tracking — no isChanged(...).
+                         • Always fully re-invoked if the parent re-runs.
+                         • Useful for tiny utility composables with no reactive dependencies.
+
+                    • @NonRestartableComposable: Applying to a Composable function tells the runtime to update
+                      its parameters without restarting the function, allowing it to maintain internal state
+                      and ongoing side effects.
+
+
+               3.d) ✅ Key Takeaway(Theroratically)
+                       Annotation	                    Recomposition Trigger	                Log Behavior
+                        @Composable (no annotation)	    Only if state read in body changes	    Logs only when inputs cause re-run
+                        @NonRestartableComposable	    Ignores recomposition tracking	        Logs only once
+                        @NonSkippableComposable	        Always re-runs when parent re-runs      Logs every time parent changes
 
                2.c)
                 📌 Analogy
-                    • Without @NonRestartableComposable, Compose is like a security guard who checks
+                    • Without normal Composable, Compose is like a security guard who checks
                         every time but usually lets you through.
                     • With @NonRestartableComposable, it’s like having a VIP pass — the guard doesn’t
                         even check anymore.
 
-               2.d)
-                 ✅ Final Summary:
-                    • “Avoid generating restart and skip logic” means:
-                            • No recomposition checkpoints for this function.
-                            • No parameter change tracking — no isChanged(...).
-                            • Always fully re-invoked if the parent re-runs.
-                            • Useful for tiny utility composables with no reactive dependencies.
-
-                    • @NonRestartableComposableApplying to a Composable function tells the runtime to update
-                      its parameters without restarting the function, allowing it to maintain internal state
-                      and ongoing side effects.
 
  Reference:
     https://www.youtube.com/watch?v=h1xTtTl0k7Q&ab_channel=KotlinbyJetBrains
+    http://blog.shreyaspatil.dev/deep-dive-into-annotations-in-jetpack-compose
     https://velog.io/@skydoves/compose-stability
 * */
 
@@ -240,8 +254,8 @@ fun RecompositionNonRestartableComposableSample(modifier: Modifier = Modifier) {
 
     Column(modifier = Modifier.padding(16.dp).verticalScroll(rememberScrollState()).then(modifier)) {
         println("🔥 RecompositionSample Root Column Container")
-        Text(modifier = Modifier.padding(top = 30.dp, bottom = 20.dp), text = "Recomposition_Normal_vs_NonRestartableComposableSample ")
-        Recomposition_Normal_vs_NonRestartableComposableSample()
+        Text(modifier = Modifier.padding(top = 30.dp, bottom = 20.dp), text = "Recomposition_Normal_vs_NonRestartableComposableSample_vs_NonSkippableComposable")
+        Recomposition_Normal_vs_NonRestartableComposableSample_vs_NonSkippableComposable()
 
         HorizontalDivider(thickness = 50.dp, color = Color.Red, modifier = Modifier
             .background(getRandomColor())
@@ -251,3 +265,7 @@ fun RecompositionNonRestartableComposableSample(modifier: Modifier = Modifier) {
         RecompositionNonRestartableAnnotationSample()
     }
 }
+/*
+* Reference:
+*   http://blog.shreyaspatil.dev/deep-dive-into-annotations-in-jetpack-compose
+* */
